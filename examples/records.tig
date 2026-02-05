@@ -1,0 +1,20 @@
+/* Test records and nested structures */
+let
+    type point = {x: int, y: int}
+    type line = {start: point, finish: point}
+
+    var p1 := point{x = 10, y = 20}
+    var p2 := point{x = 30, y = 40}
+    var myline := line{start = p1, finish = p2}
+
+    function distance(p1: point, p2: point): int =
+        let
+            var dx := p2.x - p1.x
+            var dy := p2.y - p1.y
+        in
+            dx * dx + dy * dy
+        end
+in
+    myline.start.x := 0;
+    distance(myline.start, myline.finish)
+end

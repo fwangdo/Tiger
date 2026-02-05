@@ -1,0 +1,22 @@
+/* Test loops and break */
+let
+    var sum := 0
+    var i := 0
+in
+    /* while loop */
+    while i < 10 do (
+        sum := sum + i;
+        i := i + 1
+    );
+
+    /* for loop */
+    for j := 1 to 100 do
+        sum := sum + j;
+
+    /* nested loops with break */
+    for x := 0 to 9 do
+        for y := 0 to 9 do
+            if x * y > 50 then break;
+
+    sum
+end
