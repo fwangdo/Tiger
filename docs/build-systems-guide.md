@@ -1,1263 +1,1079 @@
-# Build Systems & Shell Scripts: A Comprehensive Guide
+# 빌드 시스템과 셸 스크립트 완벽 가이드
 
-Learn to automate C++ builds using CMake and shell scripts.
-
----
-
-## Table of Contents
-
-1. [Part 1: Shell Scripting Fundamentals](#part-1-shell-scripting-fundamentals)
-2. [Part 2: CMake Basics](#part-2-cmake-basics)
-3. [Part 3: Advanced CMake](#part-3-advanced-cmake)
-4. [Part 4: Build Automation Scripts](#part-4-build-automation-scripts)
-5. [Part 5: Real-World Build Script Examples](#part-5-real-world-build-script-examples)
+C++ 프로젝트를 CMake와 셸 스크립트로 자동화하는 방법을 배웁니다.
 
 ---
 
-## Part 1: Shell Scripting Fundamentals
+## 목차
 
-### 1.1 What is a Shell Script?
+1. [Part 1: 셸 스크립트 기초](#part-1-셸-스크립트-기초)
+2. [Part 2: CMake 기초](#part-2-cmake-기초)
+3. [Part 3: CMake 심화](#part-3-cmake-심화)
+4. [Part 4: 빌드 자동화 스크립트](#part-4-빌드-자동화-스크립트)
 
-A shell script is a text file containing commands that the shell executes sequentially. It automates repetitive tasks.
+---
+
+## Part 1: 셸 스크립트 기초
+
+### 1.1 셸 스크립트란?
+
+셸 스크립트는 터미널에서 실행할 명령어들을 파일에 모아놓은 것입니다.
+매번 같은 명령어를 반복 입력하는 대신, 스크립트 파일 하나로 자동화할 수 있습니다.
 
 ```bash
 #!/bin/bash
-# This is a comment
+# 이것은 주석입니다
 echo "Hello, World!"
 ```
 
-The first line `#!/bin/bash` is called a **shebang** - it tells the system which interpreter to use.
+**첫 번째 줄 `#!/bin/bash` 설명:**
+- `#!`는 "shebang"이라고 부릅니다
+- 이 스크립트를 어떤 프로그램으로 실행할지 지정합니다
+- `/bin/bash`는 Bash 셸의 위치입니다
+- 즉, "이 파일을 bash로 실행해주세요"라는 의미입니다
 
-### 1.2 Creating and Running Scripts
+### 1.2 스크립트 만들고 실행하기
 
 ```bash
-# Create a script
+# 1. 스크립트 파일 만들기
 cat > myscript.sh << 'EOF'
 #!/bin/bash
-echo "Hello from script!"
+echo "스크립트가 실행되었습니다!"
 EOF
 
-# Make it executable
+# 2. 실행 권한 부여하기 (중요!)
 chmod +x myscript.sh
 
-# Run it
+# 3. 실행하기
 ./myscript.sh
 ```
 
-### 1.3 Variables
+**`chmod +x`가 필요한 이유:**
+- 리눅스/맥에서 파일은 기본적으로 실행 권한이 없습니다
+- `+x`는 "실행(eXecute) 권한을 추가(+)하라"는 의미입니다
+- 이 명령 없이 `./myscript.sh`를 실행하면 "Permission denied" 오류가 납니다
+
+### 1.3 변수
 
 ```bash
 #!/bin/bash
 
-# Variable assignment (NO spaces around =)
+# 변수 할당 (= 주위에 공백 없이!)
 NAME="Tiger"
 VERSION=1.0
 BUILD_DIR="build"
 
-# Using variables (use $VAR or ${VAR})
+# 잘못된 예 (오류 발생):
+# NAME = "Tiger"    # 공백이 있으면 안 됨!
+
+# 변수 사용하기 ($변수명 또는 ${변수명})
 echo "Building $NAME version $VERSION"
 echo "Output directory: ${BUILD_DIR}"
 
-# Command substitution - capture command output
-CURRENT_DIR=$(pwd)
-DATE=$(date +%Y-%m-%d)
-FILE_COUNT=$(ls -1 | wc -l)
-
-echo "Current directory: $CURRENT_DIR"
-echo "Date: $DATE"
-echo "Files in directory: $FILE_COUNT"
-
-# Environment variables
-echo "Home directory: $HOME"
-echo "Current user: $USER"
-echo "Path: $PATH"
+# ${} 를 쓰는 이유:
+# echo "$NAMEcompiler"  # NAME 다음에 바로 문자가 오면 NAMEcompiler라는 변수를 찾음
+# echo "${NAME}compiler" # 이렇게 해야 NAME 변수 + "compiler" 문자열이 됨
 ```
 
-### 1.4 Special Variables
+**명령어 결과를 변수에 저장하기 (Command Substitution):**
 
-| Variable | Meaning |
-|----------|---------|
-| `$0` | Script name |
-| `$1, $2, ...` | Positional arguments |
-| `$#` | Number of arguments |
-| `$@` | All arguments as separate words |
-| `$*` | All arguments as single string |
-| `$?` | Exit status of last command |
-| `$$` | Process ID of current script |
-| `$!` | Process ID of last background command |
+```bash
+# $(명령어) 형식으로 명령어 실행 결과를 변수에 저장
+CURRENT_DIR=$(pwd)           # pwd 명령의 결과 저장
+TODAY=$(date +%Y-%m-%d)      # 오늘 날짜 저장
+FILE_COUNT=$(ls -1 | wc -l)  # 파일 개수 저장
+
+echo "현재 디렉토리: $CURRENT_DIR"
+echo "오늘 날짜: $TODAY"
+echo "파일 개수: $FILE_COUNT"
+```
+
+**기본값 설정하기:**
+
+```bash
+# 변수가 설정되지 않았으면 기본값 사용
+BUILD_TYPE=${BUILD_TYPE:-Release}
+
+# 설명:
+# ${변수:-기본값} 형식
+# BUILD_TYPE이 비어있거나 설정 안 됐으면 "Release" 사용
+# 이미 값이 있으면 그 값 유지
+
+# 사용 예:
+# $ ./build.sh              # BUILD_TYPE="Release" (기본값)
+# $ BUILD_TYPE=Debug ./build.sh  # BUILD_TYPE="Debug" (지정한 값)
+```
+
+### 1.4 특수 변수
+
+스크립트에서 자동으로 사용할 수 있는 특수 변수들:
+
+| 변수 | 의미 | 예시 |
+|------|------|------|
+| `$0` | 스크립트 파일 이름 | `./build.sh` |
+| `$1`, `$2`, ... | 첫 번째, 두 번째, ... 인자 | `./build.sh Debug` → `$1`="Debug" |
+| `$#` | 인자 개수 | 인자가 3개면 `$#`=3 |
+| `$@` | 모든 인자 (개별 단어로) | "arg1" "arg2" "arg3" |
+| `$?` | 직전 명령의 종료 코드 | 성공=0, 실패=1 이상 |
+| `$$` | 현재 스크립트의 프로세스 ID | 12345 |
 
 ```bash
 #!/bin/bash
 
-echo "Script name: $0"
-echo "First argument: $1"
-echo "Second argument: $2"
-echo "Number of arguments: $#"
-echo "All arguments: $@"
+echo "스크립트 이름: $0"
+echo "첫 번째 인자: $1"
+echo "두 번째 인자: $2"
+echo "인자 개수: $#"
+echo "모든 인자: $@"
+
+# 실행 예: ./test.sh hello world
+# 출력:
+#   스크립트 이름: ./test.sh
+#   첫 번째 인자: hello
+#   두 번째 인자: world
+#   인자 개수: 2
+#   모든 인자: hello world
 ```
 
-### 1.5 Conditionals
+### 1.5 조건문
 
-#### Basic if-else
+#### 기본 if-else 구조
 
 ```bash
 #!/bin/bash
 
-if [ condition ]; then
-    # commands
-elif [ another_condition ]; then
-    # commands
+if [ 조건 ]; then
+    # 조건이 참일 때 실행
+    echo "조건이 참입니다"
+elif [ 다른조건 ]; then
+    # 첫 번째 조건은 거짓이고, 다른조건이 참일 때
+    echo "다른 조건이 참입니다"
 else
-    # commands
-fi
+    # 모든 조건이 거짓일 때
+    echo "모든 조건이 거짓입니다"
+fi  # if를 거꾸로 쓴 fi로 끝냄
 ```
 
-#### String Comparisons
+**주의:** `[`와 `]` 안쪽에 반드시 공백이 있어야 합니다!
+```bash
+if [ -f "$FILE" ]; then   # 올바름
+if [-f "$FILE"]; then     # 오류! 공백 필요
+```
+
+#### 문자열 비교
 
 ```bash
 #!/bin/bash
 
 STRING="hello"
 
-# String equality
+# 문자열이 같은지
 if [ "$STRING" = "hello" ]; then
-    echo "Strings are equal"
+    echo "문자열이 hello입니다"
 fi
 
-# String inequality
+# 문자열이 다른지
 if [ "$STRING" != "world" ]; then
-    echo "Strings are not equal"
+    echo "문자열이 world가 아닙니다"
 fi
 
-# Empty string check
+# 문자열이 비어있는지 (-z: zero length)
 if [ -z "$STRING" ]; then
-    echo "String is empty"
+    echo "문자열이 비어있습니다"
 fi
 
-# Non-empty string check
+# 문자열이 비어있지 않은지 (-n: non-zero length)
 if [ -n "$STRING" ]; then
-    echo "String is not empty"
+    echo "문자열이 비어있지 않습니다"
 fi
 ```
 
-#### Numeric Comparisons
+**왜 변수를 따옴표로 감싸나요?**
+```bash
+FILE="my file.txt"  # 공백이 포함된 파일명
+
+# 따옴표 없이:
+if [ -f $FILE ]; then    # 오류! "my"와 "file.txt"로 분리됨
+
+# 따옴표 있으면:
+if [ -f "$FILE" ]; then  # 정상! "my file.txt" 전체가 하나로 처리
+```
+
+#### 숫자 비교
+
+숫자 비교는 `=` 대신 특별한 연산자를 사용합니다:
+
+| 연산자 | 의미 | 영어 원형 |
+|--------|------|-----------|
+| `-eq` | 같다 (==) | **eq**ual |
+| `-ne` | 다르다 (!=) | **n**ot **e**qual |
+| `-lt` | 작다 (<) | **l**ess **t**han |
+| `-le` | 작거나 같다 (<=) | **l**ess or **e**qual |
+| `-gt` | 크다 (>) | **g**reater **t**han |
+| `-ge` | 크거나 같다 (>=) | **g**reater or **e**qual |
 
 ```bash
 #!/bin/bash
 
 NUM=10
 
-# Use -eq, -ne, -lt, -le, -gt, -ge for numbers
 if [ "$NUM" -eq 10 ]; then
-    echo "Equal to 10"
+    echo "NUM은 10입니다"
 fi
 
 if [ "$NUM" -gt 5 ]; then
-    echo "Greater than 5"
+    echo "NUM은 5보다 큽니다"
 fi
 
 if [ "$NUM" -le 20 ]; then
-    echo "Less than or equal to 20"
+    echo "NUM은 20 이하입니다"
 fi
 ```
 
-| Operator | Meaning |
-|----------|---------|
-| `-eq` | Equal |
-| `-ne` | Not equal |
-| `-lt` | Less than |
-| `-le` | Less than or equal |
-| `-gt` | Greater than |
-| `-ge` | Greater than or equal |
+#### 파일/디렉토리 검사
 
-#### File Tests
+| 연산자 | 의미 | 영어 원형 |
+|--------|------|-----------|
+| `-e` | 존재하는가 | **e**xists |
+| `-f` | 일반 파일인가 | **f**ile |
+| `-d` | 디렉토리인가 | **d**irectory |
+| `-r` | 읽기 가능한가 | **r**eadable |
+| `-w` | 쓰기 가능한가 | **w**ritable |
+| `-x` | 실행 가능한가 | e**x**ecutable |
+| `-s` | 파일 크기가 0보다 큰가 | **s**ize > 0 |
 
 ```bash
 #!/bin/bash
 
-FILE="test.txt"
+FILE="config.txt"
 DIR="build"
 
-# File exists
+# 파일이 존재하는가?
 if [ -e "$FILE" ]; then
-    echo "File exists"
+    echo "파일이 존재합니다"
 fi
 
-# Is a regular file
+# 일반 파일인가? (디렉토리가 아닌)
 if [ -f "$FILE" ]; then
-    echo "Is a regular file"
+    echo "일반 파일입니다"
 fi
 
-# Is a directory
+# 디렉토리인가?
 if [ -d "$DIR" ]; then
-    echo "Is a directory"
+    echo "디렉토리입니다"
 fi
 
-# File is readable/writable/executable
-if [ -r "$FILE" ]; then echo "Readable"; fi
-if [ -w "$FILE" ]; then echo "Writable"; fi
-if [ -x "$FILE" ]; then echo "Executable"; fi
-
-# File is not empty
-if [ -s "$FILE" ]; then
-    echo "File is not empty"
-fi
-```
-
-| Operator | Meaning |
-|----------|---------|
-| `-e` | Exists |
-| `-f` | Is regular file |
-| `-d` | Is directory |
-| `-r` | Is readable |
-| `-w` | Is writable |
-| `-x` | Is executable |
-| `-s` | Is not empty |
-| `-L` | Is symbolic link |
-
-#### Logical Operators
-
-```bash
-#!/bin/bash
-
-# AND: -a or &&
-if [ -f "$FILE" ] && [ -r "$FILE" ]; then
-    echo "File exists and is readable"
-fi
-
-# OR: -o or ||
-if [ -f "$FILE" ] || [ -d "$FILE" ]; then
-    echo "Path exists as file or directory"
-fi
-
-# NOT: !
+# 파일이 존재하지 않는가? (! = NOT)
 if [ ! -e "$FILE" ]; then
-    echo "File does not exist"
+    echo "파일이 존재하지 않습니다"
 fi
 ```
 
-#### Modern Test Syntax [[ ]]
+#### 논리 연산자
 
 ```bash
 #!/bin/bash
 
-# [[ ]] is more powerful than [ ]
-# - Supports pattern matching
-# - Supports regex with =~
-# - No word splitting issues
-
-STRING="hello world"
-
-# Pattern matching
-if [[ "$STRING" == hello* ]]; then
-    echo "Starts with hello"
+# AND: 둘 다 참이어야 참
+if [ -f "$FILE" ] && [ -r "$FILE" ]; then
+    echo "파일이 존재하고 읽기 가능합니다"
 fi
 
-# Regex matching
-if [[ "$STRING" =~ ^hello ]]; then
-    echo "Matches regex ^hello"
+# OR: 둘 중 하나만 참이면 참
+if [ -f "$FILE" ] || [ -d "$FILE" ]; then
+    echo "파일이거나 디렉토리입니다"
 fi
 
-# Safe variable expansion (no quotes needed)
-if [[ $STRING == "hello world" ]]; then
-    echo "Equal"
+# NOT: 조건 반전
+if [ ! -e "$FILE" ]; then
+    echo "존재하지 않습니다"
 fi
 ```
 
-### 1.6 Loops
+### 1.6 반복문
 
-#### For Loop
+#### for 반복문
 
 ```bash
 #!/bin/bash
 
-# Loop over list
-for item in apple banana cherry; do
-    echo "Fruit: $item"
+# 리스트 순회
+for fruit in apple banana cherry; do
+    echo "과일: $fruit"
 done
+# 출력:
+#   과일: apple
+#   과일: banana
+#   과일: cherry
 
-# Loop over files
+# 파일 순회 (glob 패턴 사용)
 for file in *.cpp; do
-    echo "C++ file: $file"
+    echo "C++ 파일: $file"
 done
 
-# Loop over command output
-for user in $(cat /etc/passwd | cut -d: -f1); do
-    echo "User: $user"
-done
-
-# C-style for loop
+# C 스타일 for 문 (숫자 반복)
 for ((i = 0; i < 5; i++)); do
-    echo "Index: $i"
+    echo "인덱스: $i"
 done
+# 출력: 0, 1, 2, 3, 4
 
-# Loop over arguments
+# 인자 순회
 for arg in "$@"; do
-    echo "Argument: $arg"
+    echo "인자: $arg"
 done
 ```
 
-#### While Loop
+#### while 반복문
 
 ```bash
 #!/bin/bash
 
-# Counter-based while loop
+# 조건이 참인 동안 반복
 count=0
 while [ $count -lt 5 ]; do
-    echo "Count: $count"
-    ((count++))
+    echo "카운트: $count"
+    ((count++))  # count를 1 증가
 done
 
-# Read file line by line
+# 파일을 한 줄씩 읽기
 while IFS= read -r line; do
-    echo "Line: $line"
+    echo "줄: $line"
 done < input.txt
 
-# Infinite loop with break
+# 무한 루프 + break
 while true; do
-    echo "Running..."
-    if [ some_condition ]; then
-        break
+    echo "실행 중..."
+    if [ 어떤조건 ]; then
+        break  # 루프 탈출
     fi
-    sleep 1
+    sleep 1  # 1초 대기
 done
 ```
 
-#### Until Loop
+### 1.7 함수
 
 ```bash
 #!/bin/bash
 
-# Until loop - runs until condition is true
-count=0
-until [ $count -ge 5 ]; do
-    echo "Count: $count"
-    ((count++))
-done
-```
-
-### 1.7 Functions
-
-```bash
-#!/bin/bash
-
-# Function definition
-function greet() {
-    echo "Hello, $1!"
+# 함수 정의
+greet() {
+    echo "안녕하세요, $1님!"  # $1 = 첫 번째 인자
 }
 
-# Alternative syntax
-say_goodbye() {
-    echo "Goodbye, $1!"
-}
+# 함수 호출
+greet "홍길동"
+# 출력: 안녕하세요, 홍길동님!
 
-# Function with return value
+# 값을 반환하는 함수 (echo로 출력)
 add_numbers() {
-    local result=$(( $1 + $2 ))
-    echo $result  # "Return" via stdout
+    local result=$(( $1 + $2 ))  # local: 지역 변수
+    echo $result  # 결과를 "반환" (실제로는 출력)
 }
 
-# Function with exit status
-check_file() {
+# 함수 결과 받기
+sum=$(add_numbers 5 3)
+echo "합계: $sum"  # 합계: 8
+
+# 성공/실패를 반환하는 함수 (return 사용)
+file_exists() {
     if [ -f "$1" ]; then
-        return 0  # Success
+        return 0  # 성공 (유닉스에서 0 = 성공)
     else
-        return 1  # Failure
+        return 1  # 실패
     fi
 }
 
-# Using functions
-greet "World"
-say_goodbye "World"
-
-sum=$(add_numbers 5 3)
-echo "Sum: $sum"
-
-if check_file "test.txt"; then
-    echo "File exists"
+# 함수 결과 확인
+if file_exists "config.txt"; then
+    echo "파일이 있습니다"
 else
-    echo "File not found"
+    echo "파일이 없습니다"
 fi
 ```
 
-#### Local Variables
+**`local` 키워드:**
+- 함수 안에서만 사용되는 지역 변수를 만듭니다
+- `local` 없이 변수를 만들면 전역 변수가 되어 함수 밖에서도 값이 유지됩니다
+
+### 1.8 오류 처리
 
 ```bash
 #!/bin/bash
 
-GLOBAL_VAR="I'm global"
-
-my_function() {
-    local LOCAL_VAR="I'm local"
-    GLOBAL_VAR="Modified global"
-
-    echo "Inside function:"
-    echo "  Local: $LOCAL_VAR"
-    echo "  Global: $GLOBAL_VAR"
-}
-
-my_function
-
-echo "Outside function:"
-echo "  Local: $LOCAL_VAR"    # Empty - local is not accessible
-echo "  Global: $GLOBAL_VAR"  # Modified
-```
-
-### 1.8 Arrays
-
-```bash
-#!/bin/bash
-
-# Array declaration
-FRUITS=("apple" "banana" "cherry")
-
-# Accessing elements (0-indexed)
-echo "First fruit: ${FRUITS[0]}"
-echo "Second fruit: ${FRUITS[1]}"
-
-# All elements
-echo "All fruits: ${FRUITS[@]}"
-
-# Number of elements
-echo "Count: ${#FRUITS[@]}"
-
-# Adding elements
-FRUITS+=("date")
-
-# Looping over array
-for fruit in "${FRUITS[@]}"; do
-    echo "Fruit: $fruit"
-done
-
-# Associative arrays (bash 4+)
-declare -A VERSIONS
-VERSIONS["gcc"]="11.0"
-VERSIONS["clang"]="14.0"
-VERSIONS["cmake"]="3.25"
-
-echo "GCC version: ${VERSIONS[gcc]}"
-
-# Loop over associative array
-for key in "${!VERSIONS[@]}"; do
-    echo "$key: ${VERSIONS[$key]}"
-done
-```
-
-### 1.9 Input/Output
-
-#### Reading Input
-
-```bash
-#!/bin/bash
-
-# Read from user
-echo -n "Enter your name: "
-read NAME
-echo "Hello, $NAME!"
-
-# Read with prompt
-read -p "Enter age: " AGE
-
-# Read silently (for passwords)
-read -s -p "Enter password: " PASSWORD
-echo  # newline after silent read
-
-# Read with timeout
-if read -t 5 -p "Quick! Enter something: " QUICK; then
-    echo "You entered: $QUICK"
-else
-    echo "Too slow!"
-fi
-
-# Read with default value
-read -p "Build type [Release]: " BUILD_TYPE
-BUILD_TYPE=${BUILD_TYPE:-Release}
-```
-
-#### Output and Redirection
-
-```bash
-#!/bin/bash
-
-# Standard output
-echo "Normal message"
-
-# Standard error
-echo "Error message" >&2
-
-# Redirect stdout to file
-echo "Log entry" > output.log      # Overwrite
-echo "Another entry" >> output.log # Append
-
-# Redirect stderr to file
-command 2> error.log
-
-# Redirect both stdout and stderr
-command > all.log 2>&1
-command &> all.log  # Shorthand (bash)
-
-# Discard output
-command > /dev/null 2>&1
-
-# Pipe output to another command
-cat file.txt | grep "pattern" | sort | uniq
-```
-
-### 1.10 Error Handling
-
-```bash
-#!/bin/bash
-
-# Exit on error
+# 오류 발생 시 즉시 중단
 set -e
 
-# Exit on undefined variable
+# 정의되지 않은 변수 사용 시 오류
 set -u
 
-# Fail on pipe errors
+# 파이프라인에서 오류 발생 시 전체 실패
 set -o pipefail
 
-# Combined (recommended for scripts)
+# 위 세 개를 한 번에 (권장)
+set -euo pipefail
+```
+
+**각 옵션 설명:**
+
+`set -e` (errexit):
+```bash
+set -e
+mkdir /invalid/path  # 실패하면 스크립트 즉시 종료
+echo "이 줄은 실행되지 않음"
+```
+
+`set -u` (nounset):
+```bash
+set -u
+echo $UNDEFINED_VAR  # 오류! 정의되지 않은 변수
+```
+
+`set -o pipefail`:
+```bash
+set -o pipefail
+cat nonexistent.txt | grep "pattern"  # cat이 실패하면 전체 실패
+# pipefail 없으면 grep의 결과(성공)만 반환
+```
+
+**오류 처리 함수:**
+
+```bash
+#!/bin/bash
 set -euo pipefail
 
-# Check command success
-if ! command -v cmake &> /dev/null; then
-    echo "Error: cmake is not installed" >&2
-    exit 1
-fi
-
-# Trap errors
-trap 'echo "Error on line $LINENO"; exit 1' ERR
-
-# Cleanup on exit
-cleanup() {
-    echo "Cleaning up..."
-    rm -rf "$TEMP_DIR"
-}
-trap cleanup EXIT
-
-# Custom error function
+# 오류 메시지 출력하고 종료하는 함수
 die() {
-    echo "Error: $1" >&2
-    exit "${2:-1}"
+    echo "오류: $1" >&2  # >&2 = 표준 오류로 출력
+    exit "${2:-1}"       # 두 번째 인자가 없으면 종료 코드 1
 }
 
-# Usage
-[ -f "config.txt" ] || die "Config file not found" 2
+# 사용 예
+[ -f "config.txt" ] || die "config.txt 파일이 필요합니다"
 ```
 
-### 1.11 Useful Patterns
+### 1.9 인자 파싱 (getopts)
 
-#### Default Values
+명령줄 옵션을 처리하는 표준 방법:
 
 ```bash
 #!/bin/bash
 
-# Default value if unset or empty
-BUILD_TYPE=${BUILD_TYPE:-Release}
-
-# Default value if unset only
-BUILD_TYPE=${BUILD_TYPE-Release}
-
-# Assign default if unset
-: ${BUILD_TYPE:=Release}
-
-# Error if unset
-: ${REQUIRED_VAR:?"REQUIRED_VAR must be set"}
-```
-
-#### String Manipulation
-
-```bash
-#!/bin/bash
-
-STRING="Hello, World!"
-
-# Length
-echo "Length: ${#STRING}"
-
-# Substring (offset, length)
-echo "Substring: ${STRING:0:5}"   # "Hello"
-echo "From index 7: ${STRING:7}"  # "World!"
-
-# Replace first occurrence
-echo "${STRING/World/Universe}"   # "Hello, Universe!"
-
-# Replace all occurrences
-echo "${STRING//o/0}"             # "Hell0, W0rld!"
-
-# Remove prefix pattern
-FILE="document.txt"
-echo "${FILE%.txt}"               # "document"
-
-# Remove suffix pattern
-PATH="/home/user/file.txt"
-echo "${PATH##*/}"                # "file.txt" (basename)
-echo "${PATH%/*}"                 # "/home/user" (dirname)
-```
-
-#### Command-Line Argument Parsing
-
-```bash
-#!/bin/bash
-
-# Simple positional arguments
-usage() {
-    echo "Usage: $0 [-d] [-t type] [-o output] input_file"
-    exit 1
-}
-
-# Parse options with getopts
+# 기본값 설정
 DEBUG=false
-BUILD_TYPE="Release"
-OUTPUT_DIR="build"
+OUTPUT_FILE="output.txt"
+VERBOSE=0
 
-while getopts "dt:o:h" opt; do
+# 사용법 출력 함수
+usage() {
+    cat << EOF
+사용법: $0 [옵션] <입력파일>
+
+옵션:
+    -d          디버그 모드
+    -o 파일     출력 파일 지정 (기본: output.txt)
+    -v          자세한 출력 (여러 번 사용 가능)
+    -h          도움말 출력
+EOF
+    exit 0
+}
+
+# getopts로 옵션 파싱
+# "do:vh" 의미:
+#   d  = -d 옵션 (인자 없음)
+#   o: = -o 옵션 (: 가 있으면 인자 필요)
+#   v  = -v 옵션 (인자 없음)
+#   h  = -h 옵션 (인자 없음)
+while getopts "do:vh" opt; do
     case $opt in
         d) DEBUG=true ;;
-        t) BUILD_TYPE="$OPTARG" ;;
-        o) OUTPUT_DIR="$OPTARG" ;;
+        o) OUTPUT_FILE="$OPTARG" ;;  # OPTARG = 옵션의 인자값
+        v) ((VERBOSE++)) ;;          # -v -v 하면 2가 됨
         h) usage ;;
-        ?) usage ;;
+        ?) usage ;;  # 잘못된 옵션
     esac
 done
 
-# Shift to get remaining positional arguments
+# 처리된 옵션들을 건너뛰기
 shift $((OPTIND - 1))
 
-if [ $# -lt 1 ]; then
+# 나머지 인자 (옵션이 아닌 것들)
+INPUT_FILE="${1:-}"
+if [ -z "$INPUT_FILE" ]; then
+    echo "오류: 입력 파일을 지정하세요" >&2
     usage
 fi
 
-INPUT_FILE="$1"
+echo "DEBUG: $DEBUG"
+echo "OUTPUT: $OUTPUT_FILE"
+echo "VERBOSE: $VERBOSE"
+echo "INPUT: $INPUT_FILE"
+```
 
-echo "Debug: $DEBUG"
-echo "Build type: $BUILD_TYPE"
-echo "Output: $OUTPUT_DIR"
-echo "Input: $INPUT_FILE"
+**실행 예:**
+```bash
+./script.sh -d -o result.txt -v -v input.txt
+# DEBUG: true
+# OUTPUT: result.txt
+# VERBOSE: 2
+# INPUT: input.txt
 ```
 
 ---
 
-## Part 2: CMake Basics
+## Part 2: CMake 기초
 
-### 2.1 What is CMake?
+### 2.1 CMake란?
 
-CMake is a **meta-build system** - it generates build files for other build systems (Make, Ninja, Visual Studio, Xcode).
+CMake는 **빌드 시스템 생성기**입니다.
+
+**빌드 시스템이란?**
+- 소스 코드를 실행 파일로 만드는 과정을 자동화하는 도구
+- 예: Make, Ninja, Visual Studio
+
+**CMake는 왜 필요한가?**
+- 플랫폼마다 빌드 도구가 다릅니다 (Linux=Make, Windows=Visual Studio)
+- CMake로 작성하면 모든 플랫폼에서 동작하는 빌드 설정을 만들 수 있습니다
 
 ```
-┌──────────────┐     ┌─────────────┐     ┌──────────────┐     ┌────────────┐
-│ CMakeLists   │────▶│   CMake     │────▶│  Makefile/   │────▶│ Executable │
-│    .txt      │     │ (configure) │     │  Ninja/etc   │     │  (build)   │
-└──────────────┘     └─────────────┘     └──────────────┘     └────────────┘
+┌──────────────────┐     ┌─────────────┐     ┌──────────────┐
+│ CMakeLists.txt   │────▶│   CMake     │────▶│  Makefile    │
+│ (설정 파일)       │     │ (변환기)     │     │  (빌드 파일)  │
+└──────────────────┘     └─────────────┘     └──────────────┘
+                                                    │
+                                                    ▼
+                                             ┌──────────────┐
+                                             │  실행 파일    │
+                                             └──────────────┘
 ```
 
-### 2.2 Basic CMakeLists.txt
+### 2.2 기본 CMakeLists.txt
 
 ```cmake
-# Minimum CMake version required
+# CMake 최소 버전 요구
+# 이 버전 이상의 CMake가 필요하다고 선언
 cmake_minimum_required(VERSION 3.16)
 
-# Project name and language
+# 프로젝트 정보 선언
+# NAME: 프로젝트 이름
+# VERSION: 버전 번호
+# LANGUAGES: 사용하는 프로그래밍 언어
 project(MyCompiler VERSION 1.0 LANGUAGES CXX)
 
-# C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# C++ 표준 설정
+set(CMAKE_CXX_STANDARD 17)        # C++17 사용
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  # 필수 (지원 안 되면 오류)
 
-# Create executable from source files
+# 실행 파일 만들기
+# add_executable(실행파일이름 소스파일들...)
 add_executable(mycompiler
     src/main.cpp
     src/lexer.cpp
     src/parser.cpp
-    src/token.cpp
 )
 
-# Include directories
+# 헤더 파일 디렉토리 추가
+# PRIVATE: 이 타겟에서만 사용 (다른 타겟에 전파 안 함)
 target_include_directories(mycompiler PRIVATE src)
 ```
 
-### 2.3 Building with CMake
+### 2.3 CMake로 빌드하기
 
 ```bash
-# Standard out-of-source build
+# 1. 빌드 디렉토리 만들기 (소스와 빌드 분리)
 mkdir build
 cd build
-cmake ..            # Configure (generate build files)
-cmake --build .     # Build
 
-# Or specify generator
-cmake -G "Unix Makefiles" ..
-cmake -G "Ninja" ..
+# 2. CMake 설정 (Configure)
+# ".." = 상위 디렉토리의 CMakeLists.txt를 읽음
+cmake ..
 
-# Build with specific target
-cmake --build . --target mycompiler
+# 3. 빌드 (Build)
+cmake --build .
 
-# Build with parallel jobs
-cmake --build . -j8
-cmake --build . --parallel 8
+# 또는 간단히:
+make          # Linux/Mac
+ninja         # Ninja 사용 시
 ```
 
-### 2.4 CMake Variables
+**왜 별도의 build 디렉토리를 만드나요?**
+- 소스 파일과 빌드 결과물을 분리합니다
+- `rm -rf build`로 빌드 결과물만 깔끔하게 삭제할 수 있습니다
+- 여러 빌드 설정(Debug, Release)을 각각 다른 디렉토리에 만들 수 있습니다
+
+### 2.4 CMake 변수
 
 ```cmake
-# Setting variables
-set(MY_VAR "value")
+# 변수 설정
+set(MY_VAR "값")
 set(MY_LIST "item1" "item2" "item3")
 
-# Using variables
-message(STATUS "My var: ${MY_VAR}")
-
-# Cache variables (user-configurable)
-set(MY_OPTION "default" CACHE STRING "Description of option")
-
-# Boolean option
-option(ENABLE_TESTS "Build tests" ON)
-
-# Environment variables
-set(ENV{MY_ENV_VAR} "value")
-message(STATUS "Home: $ENV{HOME}")
+# 변수 사용 (${변수명})
+message(STATUS "내 변수: ${MY_VAR}")
 ```
 
-### 2.5 Important Built-in Variables
-
-| Variable | Description |
-|----------|-------------|
-| `CMAKE_SOURCE_DIR` | Top-level source directory |
-| `CMAKE_BINARY_DIR` | Top-level build directory |
-| `CMAKE_CURRENT_SOURCE_DIR` | Current CMakeLists.txt directory |
-| `CMAKE_CURRENT_BINARY_DIR` | Current build directory |
-| `CMAKE_CXX_COMPILER` | C++ compiler path |
-| `CMAKE_BUILD_TYPE` | Build type (Debug, Release, etc.) |
-| `CMAKE_INSTALL_PREFIX` | Installation prefix |
-| `PROJECT_NAME` | Current project name |
-| `PROJECT_VERSION` | Current project version |
-
-### 2.6 Build Types
+**message() 함수 설명:**
 
 ```cmake
-# Set default build type if not specified
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-endif()
-
-# Available build types:
-# - Debug: -g (debug symbols, no optimization)
-# - Release: -O3 -DNDEBUG (optimized, no debug)
-# - RelWithDebInfo: -O2 -g -DNDEBUG (optimized with debug)
-# - MinSizeRel: -Os -DNDEBUG (size optimized)
+# message(모드 "메시지")
+# 모드 종류:
+message(STATUS "상태 메시지")     # -- 상태 메시지 (일반 정보)
+message(WARNING "경고 메시지")   # CMake Warning: 경고 메시지
+message(FATAL_ERROR "오류!")    # 오류 출력 후 CMake 중단
+message("그냥 메시지")          # 모드 없이도 가능
 ```
 
-From command line:
+**STATUS의 의미:**
+- `STATUS`는 일반적인 정보성 메시지를 의미합니다
+- 출력 시 앞에 `--`가 붙습니다
+- 예: `message(STATUS "빌드 타입: Release")` → `-- 빌드 타입: Release`
+
+**캐시 변수 (사용자 설정 가능):**
+
+```cmake
+# 캐시 변수: CMake GUI나 명령줄에서 변경 가능
+# set(변수명 기본값 CACHE 타입 "설명")
+set(MY_OPTION "default" CACHE STRING "옵션 설명")
+
+# 타입 종류:
+# STRING - 문자열
+# BOOL   - ON/OFF
+# PATH   - 디렉토리 경로
+# FILEPATH - 파일 경로
+```
+
+**option() - 불리언 옵션:**
+
+```cmake
+# option(변수명 "설명" 기본값)
+option(ENABLE_TESTS "테스트 빌드 여부" ON)
+
+# 사용:
+if(ENABLE_TESTS)
+    # 테스트 관련 설정
+endif()
+```
+
+명령줄에서 변경:
+```bash
+cmake -DENABLE_TESTS=OFF ..
+```
+
+### 2.5 중요한 내장 변수
+
+| 변수 | 설명 | 예시 값 |
+|------|------|---------|
+| `CMAKE_SOURCE_DIR` | 최상위 소스 디렉토리 | `/home/user/project` |
+| `CMAKE_BINARY_DIR` | 최상위 빌드 디렉토리 | `/home/user/project/build` |
+| `CMAKE_CURRENT_SOURCE_DIR` | 현재 CMakeLists.txt 위치 | `/home/user/project/src` |
+| `CMAKE_BUILD_TYPE` | 빌드 타입 | `Debug`, `Release` |
+| `CMAKE_CXX_COMPILER` | C++ 컴파일러 경로 | `/usr/bin/g++` |
+| `PROJECT_NAME` | 프로젝트 이름 | `MyCompiler` |
+| `PROJECT_VERSION` | 프로젝트 버전 | `1.0` |
+
+### 2.6 빌드 타입 (Build Type)
+
+```cmake
+# 빌드 타입이 지정되지 않았으면 Release로 설정
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "빌드 타입" FORCE)
+endif()
+```
+
+**빌드 타입 종류:**
+
+| 타입 | 설명 | 컴파일러 플래그 |
+|------|------|----------------|
+| `Debug` | 디버깅용 | `-g` (디버그 심볼), 최적화 없음 |
+| `Release` | 배포용 | `-O3` (최대 최적화), `-DNDEBUG` |
+| `RelWithDebInfo` | 배포 + 디버그 정보 | `-O2 -g` |
+| `MinSizeRel` | 크기 최소화 | `-Os` |
+
+**명령줄에서 빌드 타입 지정:**
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake -DCMAKE_BUILD_TYPE=Release ..
 ```
 
-### 2.7 Compiler Flags
+### 2.7 라이브러리 만들기
 
 ```cmake
-# Add compile options to a target
-target_compile_options(mycompiler PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-)
-
-# Conditional flags
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(mycompiler PRIVATE -Werror)
-endif()
-
-# Debug-specific flags
-target_compile_options(mycompiler PRIVATE
-    $<$<CONFIG:Debug>:-fsanitize=address>
-)
-
-# Generator expressions for conditional compilation
-target_compile_definitions(mycompiler PRIVATE
-    $<$<CONFIG:Debug>:DEBUG_MODE>
-    $<$<CONFIG:Release>:NDEBUG>
-)
-```
-
-### 2.8 Finding Source Files
-
-```cmake
-# Explicit list (preferred for clarity)
-set(SOURCES
-    src/main.cpp
+# 정적 라이브러리 (Static Library)
+# 컴파일 시 실행 파일에 포함됨
+add_library(mylib STATIC
     src/lexer.cpp
     src/parser.cpp
 )
 
-# Glob (use with caution - doesn't detect new files automatically)
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB_RECURSE SOURCES "src/**/*.cpp")
-
-# Better: CONFIGURE_DEPENDS (CMake 3.12+)
-file(GLOB SOURCES CONFIGURE_DEPENDS "src/*.cpp")
-
-add_executable(mycompiler ${SOURCES})
+# 공유 라이브러리 (Shared Library)
+# 실행 시 동적으로 로드됨 (.so, .dll)
+add_library(mylib SHARED
+    src/lexer.cpp
+    src/parser.cpp
+)
 ```
 
-### 2.9 Subdirectories and Libraries
+**라이브러리 연결:**
 
 ```cmake
-# Project structure:
-# project/
-# ├── CMakeLists.txt
-# ├── src/
-# │   ├── CMakeLists.txt
-# │   └── *.cpp
-# └── lib/
-#     ├── CMakeLists.txt
-#     └── *.cpp
-
-# Root CMakeLists.txt
-cmake_minimum_required(VERSION 3.16)
-project(MyProject)
-
-add_subdirectory(lib)
-add_subdirectory(src)
-
-# lib/CMakeLists.txt
-add_library(mylib STATIC
-    lexer.cpp
-    parser.cpp
-)
-target_include_directories(mylib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-# src/CMakeLists.txt
-add_executable(mycompiler main.cpp)
+# target_link_libraries(타겟 가시성 라이브러리...)
 target_link_libraries(mycompiler PRIVATE mylib)
 ```
 
-### 2.10 Installing
+**가시성(Visibility) 키워드:**
+
+| 키워드 | 의미 |
+|--------|------|
+| `PRIVATE` | 이 타겟에서만 사용 |
+| `PUBLIC` | 이 타겟과 이 타겟을 링크하는 다른 타겟에서도 사용 |
+| `INTERFACE` | 이 타겟에서는 사용 안 하고, 링크하는 다른 타겟에서만 사용 |
 
 ```cmake
-# Install executable
-install(TARGETS mycompiler
-    RUNTIME DESTINATION bin
+# 예시:
+# mylib이 내부적으로 zlib을 사용하고,
+# mylib의 헤더에 zlib 타입이 노출되어 있다면:
+target_link_libraries(mylib PUBLIC zlib)
+
+# mylib이 내부적으로만 zlib을 사용하고,
+# 헤더에는 노출되지 않는다면:
+target_link_libraries(mylib PRIVATE zlib)
+```
+
+### 2.8 컴파일 옵션 추가
+
+```cmake
+# 컴파일러 경고 옵션 추가
+target_compile_options(mycompiler PRIVATE
+    -Wall      # 일반적인 경고 활성화
+    -Wextra    # 추가 경고 활성화
+    -Wpedantic # 엄격한 표준 준수 경고
 )
 
-# Install headers
-install(FILES src/mylib.h
-    DESTINATION include
-)
+# 조건부 옵션 (GCC나 Clang일 때만)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(mycompiler PRIVATE -Werror)
+endif()
+```
 
-# Install directory
-install(DIRECTORY include/
-    DESTINATION include
+**전처리기 매크로 정의:**
+
+```cmake
+# target_compile_definitions(타겟 가시성 정의...)
+target_compile_definitions(mycompiler PRIVATE
+    DEBUG_MODE          # #define DEBUG_MODE
+    VERSION="1.0"       # #define VERSION "1.0"
 )
 ```
 
-```bash
-# Configure with install prefix
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+### 2.9 하위 디렉토리
 
-# Build and install
-cmake --build .
-cmake --install .
-# Or: make install
+큰 프로젝트는 여러 디렉토리로 나눕니다:
+
+```
+project/
+├── CMakeLists.txt       # 루트
+├── src/
+│   ├── CMakeLists.txt   # src 디렉토리용
+│   └── main.cpp
+└── lib/
+    ├── CMakeLists.txt   # lib 디렉토리용
+    ├── lexer.cpp
+    └── parser.cpp
+```
+
+**루트 CMakeLists.txt:**
+```cmake
+cmake_minimum_required(VERSION 3.16)
+project(MyProject LANGUAGES CXX)
+
+# 하위 디렉토리 추가
+add_subdirectory(lib)  # lib/CMakeLists.txt 실행
+add_subdirectory(src)  # src/CMakeLists.txt 실행
+```
+
+**lib/CMakeLists.txt:**
+```cmake
+add_library(mylib STATIC lexer.cpp parser.cpp)
+target_include_directories(mylib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+```
+
+**src/CMakeLists.txt:**
+```cmake
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE mylib)
 ```
 
 ---
 
-## Part 3: Advanced CMake
+## Part 3: CMake 심화
 
-### 3.1 Conditionals
+### 3.1 조건문
 
 ```cmake
 # if-elseif-else-endif
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Debug build")
+    message(STATUS "디버그 빌드입니다")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(STATUS "Release build")
+    message(STATUS "릴리즈 빌드입니다")
 else()
-    message(STATUS "Other build type")
+    message(STATUS "기타 빌드 타입입니다")
 endif()
 
-# Boolean checks
+# STREQUAL: 문자열 비교
+# EQUAL: 숫자 비교
+# MATCHES: 정규식 매칭
+
+# 변수가 정의되어 있는지 확인
+if(DEFINED MY_VAR)
+    message(STATUS "MY_VAR가 정의되어 있습니다")
+endif()
+
+# 불리언 옵션 확인
 if(ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
 
-# Variable defined check
-if(DEFINED MY_VAR)
-    message(STATUS "MY_VAR is defined")
-endif()
-
-# String checks
-if(MY_STRING STREQUAL "expected")
-    # ...
-endif()
-
-if(MY_STRING MATCHES "^prefix")
-    # Regex match
-endif()
-
-# Version checks
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
-    # Use newer features
-endif()
-
-# File checks
+# 파일/디렉토리 존재 확인
 if(EXISTS "${CMAKE_SOURCE_DIR}/optional.cpp")
     list(APPEND SOURCES optional.cpp)
 endif()
 ```
 
-### 3.2 Functions and Macros
+### 3.2 Generator Expressions (생성기 표현식)
+
+빌드 시점에 평가되는 조건식입니다. 설정(Configure) 시점이 아닌 빌드 시점에 값이 결정됩니다.
 
 ```cmake
-# Function (has its own scope)
-function(print_target_info target)
-    get_target_property(SOURCES ${target} SOURCES)
-    message(STATUS "Target ${target} sources: ${SOURCES}")
-endfunction()
+# $<조건:참일때값>
+# $<CONFIG:Debug> = Debug 빌드일 때 1, 아니면 0
 
-# Macro (no scope - like text substitution)
-macro(add_my_executable name)
-    add_executable(${name} ${ARGN})
-    target_compile_options(${name} PRIVATE -Wall)
-endmacro()
-
-# Usage
-print_target_info(mycompiler)
-add_my_executable(myapp main.cpp utils.cpp)
-```
-
-### 3.3 Finding Packages
-
-```cmake
-# Find installed packages
-find_package(Threads REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(Boost 1.70 COMPONENTS filesystem system REQUIRED)
-
-# Link against found packages
-target_link_libraries(myapp PRIVATE
-    Threads::Threads
-    OpenSSL::SSL
-    Boost::filesystem
-)
-
-# Optional packages
-find_package(Doxygen)
-if(Doxygen_FOUND)
-    # Add documentation target
-endif()
-```
-
-### 3.4 Testing with CTest
-
-```cmake
-# Enable testing
-enable_testing()
-
-# Add test executable
-add_executable(test_lexer tests/test_lexer.cpp)
-target_link_libraries(test_lexer PRIVATE mylib)
-
-# Register tests
-add_test(NAME LexerTest COMMAND test_lexer)
-add_test(NAME ParserTest COMMAND test_parser)
-
-# Test with arguments
-add_test(NAME IntegrationTest
-    COMMAND mycompiler --parse ${CMAKE_SOURCE_DIR}/tests/sample.tig
-)
-
-# Set test properties
-set_tests_properties(LexerTest PROPERTIES
-    TIMEOUT 30
-    LABELS "unit"
-)
-```
-
-```bash
-# Run all tests
-ctest
-
-# Run with verbose output
-ctest -V
-
-# Run specific test
-ctest -R LexerTest
-
-# Run tests matching label
-ctest -L unit
-```
-
-### 3.5 Custom Commands and Targets
-
-```cmake
-# Custom command - runs during build
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/generated.cpp
-    COMMAND python3 ${CMAKE_SOURCE_DIR}/generate.py > generated.cpp
-    DEPENDS ${CMAKE_SOURCE_DIR}/generate.py
-    COMMENT "Generating source file..."
-)
-
-# Use generated file
-add_executable(myapp main.cpp ${CMAKE_BINARY_DIR}/generated.cpp)
-
-# Custom target - can be built explicitly
-add_custom_target(format
-    COMMAND clang-format -i ${SOURCES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Formatting source files..."
-)
-
-# Custom target that always runs
-add_custom_target(run
-    COMMAND mycompiler ${CMAKE_SOURCE_DIR}/examples/test.tig
-    DEPENDS mycompiler
-    COMMENT "Running compiler..."
-)
-```
-
-### 3.6 Generator Expressions
-
-Generator expressions are evaluated at build time, not configure time.
-
-```cmake
-# Conditional based on build type
+# Debug 빌드에서만 DEBUG 매크로 정의
 target_compile_definitions(myapp PRIVATE
-    $<$<CONFIG:Debug>:DEBUG=1>
-    $<$<CONFIG:Release>:NDEBUG>
+    $<$<CONFIG:Debug>:DEBUG>
+)
+# Debug일 때: -DDEBUG
+# Release일 때: (아무것도 안 함)
+
+# Release 빌드에서만 -O3 최적화
+target_compile_options(myapp PRIVATE
+    $<$<CONFIG:Release>:-O3>
 )
 
-# Conditional based on compiler
+# 컴파일러에 따라 다른 옵션
 target_compile_options(myapp PRIVATE
     $<$<CXX_COMPILER_ID:GNU>:-fno-rtti>
     $<$<CXX_COMPILER_ID:Clang>:-fno-rtti>
     $<$<CXX_COMPILER_ID:MSVC>:/GR->
 )
 
-# Platform-specific
+# 플랫폼에 따라 다른 매크로
 target_compile_definitions(myapp PRIVATE
     $<$<PLATFORM_ID:Windows>:WINDOWS>
     $<$<PLATFORM_ID:Linux>:LINUX>
     $<$<PLATFORM_ID:Darwin>:MACOS>
 )
+```
 
-# Boolean expressions
-$<AND:$<CONFIG:Debug>,$<CXX_COMPILER_ID:GNU>>
-$<OR:$<PLATFORM_ID:Linux>,$<PLATFORM_ID:Darwin>>
-$<NOT:$<CONFIG:Debug>>
+### 3.3 테스트 (CTest)
 
-# Conditional include directories
-target_include_directories(myapp PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+```cmake
+# 테스트 활성화
+enable_testing()
+
+# 테스트 실행 파일 추가
+add_executable(test_lexer tests/test_lexer.cpp)
+target_link_libraries(test_lexer PRIVATE mylib)
+
+# 테스트 등록
+# add_test(NAME 테스트이름 COMMAND 실행할명령)
+add_test(NAME LexerTest COMMAND test_lexer)
+
+# 인자와 함께 테스트
+add_test(NAME ParserTest
+    COMMAND mycompiler --parse ${CMAKE_SOURCE_DIR}/tests/sample.txt
+)
+
+# 테스트 속성 설정
+set_tests_properties(LexerTest PROPERTIES
+    TIMEOUT 30        # 30초 타임아웃
+    LABELS "unit"     # 라벨 지정
 )
 ```
 
-### 3.7 Presets (CMake 3.19+)
-
-Create `CMakePresets.json` for reproducible builds:
-
-```json
-{
-    "version": 3,
-    "cmakeMinimumRequired": {
-        "major": 3,
-        "minor": 19,
-        "patch": 0
-    },
-    "configurePresets": [
-        {
-            "name": "debug",
-            "displayName": "Debug",
-            "binaryDir": "${sourceDir}/build/debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "ENABLE_TESTS": "ON"
-            }
-        },
-        {
-            "name": "release",
-            "displayName": "Release",
-            "binaryDir": "${sourceDir}/build/release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "ENABLE_TESTS": "OFF"
-            }
-        },
-        {
-            "name": "ninja-release",
-            "inherits": "release",
-            "generator": "Ninja"
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "debug",
-            "configurePreset": "debug"
-        },
-        {
-            "name": "release",
-            "configurePreset": "release"
-        }
-    ]
-}
+**테스트 실행:**
+```bash
+# 빌드 디렉토리에서
+ctest                    # 모든 테스트 실행
+ctest -V                 # 자세한 출력
+ctest -R Lexer           # "Lexer"가 포함된 테스트만
+ctest -L unit            # "unit" 라벨 테스트만
+ctest --output-on-failure  # 실패한 테스트의 출력 표시
 ```
 
-Usage:
+### 3.4 설치 (Install)
+
+```cmake
+# 실행 파일 설치
+install(TARGETS mycompiler
+    RUNTIME DESTINATION bin  # 실행 파일 → bin/
+)
+
+# 라이브러리 설치
+install(TARGETS mylib
+    ARCHIVE DESTINATION lib  # 정적 라이브러리 → lib/
+    LIBRARY DESTINATION lib  # 공유 라이브러리 → lib/
+)
+
+# 헤더 파일 설치
+install(FILES src/mylib.h
+    DESTINATION include
+)
+
+# 디렉토리 전체 설치
+install(DIRECTORY include/
+    DESTINATION include
+)
+```
+
+**설치 실행:**
 ```bash
-cmake --preset debug
-cmake --build --preset debug
+# 기본 위치 (/usr/local)에 설치
+cmake --install .
+
+# 다른 위치에 설치
+cmake -DCMAKE_INSTALL_PREFIX=/opt/myapp ..
+cmake --build .
+cmake --install .
 ```
 
 ---
 
-## Part 4: Build Automation Scripts
+## Part 4: 빌드 자동화 스크립트
 
-### 4.1 Basic Build Script
+### 4.1 기본 빌드 스크립트
 
 ```bash
 #!/bin/bash
-set -euo pipefail
+# build.sh - 기본 빌드 스크립트
 
-# Configuration
+set -euo pipefail  # 오류 발생 시 즉시 중단
+
+# 설정
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="${PROJECT_ROOT}/build"
 BUILD_TYPE="Release"
-GENERATOR="Unix Makefiles"
-PARALLEL_JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
-# Colors for output
-RED='\033[0;31m'
+# 색상 (터미널 출력용)
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'  # No Color (색상 초기화)
 
-# Logging functions
+# 로그 함수
 log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    echo -e "${GREEN}[INFO]${NC} $*"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
+    echo -e "${RED}[ERROR]${NC} $*" >&2
 }
 
-die() {
-    log_error "$1"
-    exit "${2:-1}"
+# cmake가 설치되어 있는지 확인
+check_cmake() {
+    if ! command -v cmake &>/dev/null; then
+        log_error "cmake가 설치되어 있지 않습니다"
+        exit 1
+    fi
 }
 
-# Check prerequisites
-check_prerequisites() {
-    log_info "Checking prerequisites..."
-
-    command -v cmake &>/dev/null || die "cmake is not installed"
-    command -v g++ &>/dev/null || command -v clang++ &>/dev/null || die "No C++ compiler found"
-
-    log_info "All prerequisites satisfied"
-}
-
-# Configure project
+# 설정 (Configure)
 configure() {
-    log_info "Configuring project (${BUILD_TYPE})..."
-
+    log_info "프로젝트 설정 중... (${BUILD_TYPE})"
     mkdir -p "${BUILD_DIR}"
-
     cmake -S "${PROJECT_ROOT}" \
           -B "${BUILD_DIR}" \
-          -G "${GENERATOR}" \
-          -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-    log_info "Configuration complete"
+          -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
 }
 
-# Build project
+# 빌드 (Build)
 build() {
-    log_info "Building project with ${PARALLEL_JOBS} parallel jobs..."
-
-    cmake --build "${BUILD_DIR}" \
-          --parallel "${PARALLEL_JOBS}"
-
-    log_info "Build complete"
+    log_info "빌드 중..."
+    cmake --build "${BUILD_DIR}" --parallel
 }
 
-# Clean build
+# 정리 (Clean)
 clean() {
-    log_info "Cleaning build directory..."
+    log_info "빌드 디렉토리 삭제 중..."
     rm -rf "${BUILD_DIR}"
-    log_info "Clean complete"
 }
 
-# Run tests
+# 테스트 (Test)
 test() {
-    log_info "Running tests..."
-
-    cd "${BUILD_DIR}"
-    ctest --output-on-failure
-
-    log_info "Tests complete"
+    log_info "테스트 실행 중..."
+    ctest --test-dir "${BUILD_DIR}" --output-on-failure
 }
 
-# Main
+# 메인
 main() {
-    check_prerequisites
+    check_cmake
     configure
     build
+    log_info "완료!"
 }
 
 main "$@"
 ```
 
-### 4.2 Full-Featured Build Script
+### 4.2 옵션이 있는 빌드 스크립트
 
 ```bash
 #!/bin/bash
+# build.sh - 옵션을 지원하는 빌드 스크립트
 #
-# build.sh - Build script for the Tiger compiler
+# 사용법:
+#   ./build.sh [옵션] [명령]
 #
-# Usage: ./build.sh [options] [command]
+# 명령:
+#   configure   프로젝트 설정
+#   build       빌드 (기본)
+#   test        테스트 실행
+#   clean       빌드 디렉토리 삭제
+#   all         설정 + 빌드 + 테스트
 #
-# Commands:
-#   configure   Configure the project (default if no command)
-#   build       Build the project
-#   test        Run tests
-#   clean       Clean build directory
-#   install     Install the project
-#   all         Configure, build, and test
-#
-# Options:
-#   -t, --type TYPE     Build type: Debug, Release, RelWithDebInfo (default: Release)
-#   -g, --generator GEN CMake generator: make, ninja (default: auto-detect)
-#   -j, --jobs N        Number of parallel jobs (default: auto-detect)
-#   -p, --prefix PATH   Installation prefix (default: /usr/local)
-#   -c, --clean         Clean before building
-#   -v, --verbose       Verbose output
-#   -h, --help          Show this help message
+# 옵션:
+#   -t, --type TYPE   빌드 타입 (Debug/Release)
+#   -j, --jobs N      병렬 작업 수
+#   -c, --clean       빌드 전 정리
+#   -v, --verbose     자세한 출력
+#   -h, --help        도움말
 
 set -euo pipefail
 
-#######################################
-# Configuration
-#######################################
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${SCRIPT_DIR}"
-BUILD_DIR="${PROJECT_ROOT}/build"
-BUILD_TYPE="Release"
-INSTALL_PREFIX="/usr/local"
-VERBOSE=false
-CLEAN_FIRST=false
 
-# Auto-detect settings
-detect_jobs() {
+# 기본값
+BUILD_TYPE="Release"
+PARALLEL_JOBS=""
+CLEAN_FIRST=false
+VERBOSE=false
+COMMAND="build"
+
+# 색상
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log_info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
+
+# 도움말
+show_help() {
+    grep '^#' "$0" | grep -v '#!/' | sed 's/^# \?//'
+    exit 0
+}
+
+# CPU 코어 수 감지
+detect_cores() {
     if command -v nproc &>/dev/null; then
         nproc
     elif command -v sysctl &>/dev/null; then
@@ -1267,240 +1083,16 @@ detect_jobs() {
     fi
 }
 
-detect_generator() {
-    if command -v ninja &>/dev/null; then
-        echo "Ninja"
-    else
-        echo "Unix Makefiles"
-    fi
-}
-
-PARALLEL_JOBS=$(detect_jobs)
-GENERATOR=$(detect_generator)
-
-#######################################
-# Colors and Logging
-#######################################
-
-if [[ -t 1 ]]; then
-    RED='\033[0;31m'
-    GREEN='\033[0;32m'
-    YELLOW='\033[1;33m'
-    BLUE='\033[0;34m'
-    BOLD='\033[1m'
-    NC='\033[0m'
-else
-    RED=''
-    GREEN=''
-    YELLOW=''
-    BLUE=''
-    BOLD=''
-    NC=''
-fi
-
-log_info()    { echo -e "${GREEN}[INFO]${NC} $*"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
-log_debug()   { [[ "${VERBOSE}" == true ]] && echo -e "${BLUE}[DEBUG]${NC} $*" || true; }
-log_section() { echo -e "\n${BOLD}=== $* ===${NC}"; }
-
-die() {
-    log_error "$1"
-    exit "${2:-1}"
-}
-
-#######################################
-# Helper Functions
-#######################################
-
-check_command() {
-    command -v "$1" &>/dev/null
-}
-
-ensure_command() {
-    check_command "$1" || die "$1 is required but not installed"
-}
-
-measure_time() {
-    local start_time=$(date +%s)
-    "$@"
-    local end_time=$(date +%s)
-    local duration=$((end_time - start_time))
-    log_info "Completed in ${duration}s"
-}
-
-#######################################
-# Build Functions
-#######################################
-
-check_prerequisites() {
-    log_section "Checking Prerequisites"
-
-    ensure_command cmake
-
-    if ! check_command g++ && ! check_command clang++; then
-        die "No C++ compiler found (need g++ or clang++)"
-    fi
-
-    if [[ "${GENERATOR}" == "Ninja" ]]; then
-        ensure_command ninja
-    fi
-
-    local cmake_version
-    cmake_version=$(cmake --version | head -1 | grep -oE '[0-9]+\.[0-9]+')
-    log_info "CMake version: ${cmake_version}"
-
-    local cxx_compiler
-    cxx_compiler=$(command -v g++ || command -v clang++)
-    log_info "C++ compiler: ${cxx_compiler}"
-
-    log_info "Generator: ${GENERATOR}"
-    log_info "Parallel jobs: ${PARALLEL_JOBS}"
-}
-
-do_configure() {
-    log_section "Configuring (${BUILD_TYPE})"
-
-    mkdir -p "${BUILD_DIR}"
-
-    local cmake_args=(
-        -S "${PROJECT_ROOT}"
-        -B "${BUILD_DIR}"
-        -G "${GENERATOR}"
-        -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
-        -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}"
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    )
-
-    if [[ "${VERBOSE}" == true ]]; then
-        cmake_args+=(-DCMAKE_VERBOSE_MAKEFILE=ON)
-    fi
-
-    log_debug "cmake ${cmake_args[*]}"
-
-    measure_time cmake "${cmake_args[@]}"
-
-    # Create symlink to compile_commands.json for IDE support
-    if [[ -f "${BUILD_DIR}/compile_commands.json" ]]; then
-        ln -sf "${BUILD_DIR}/compile_commands.json" "${PROJECT_ROOT}/compile_commands.json"
-        log_info "Created compile_commands.json symlink"
-    fi
-}
-
-do_build() {
-    log_section "Building"
-
-    if [[ ! -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
-        log_warn "Project not configured, running configure first..."
-        do_configure
-    fi
-
-    local build_args=(
-        --build "${BUILD_DIR}"
-        --parallel "${PARALLEL_JOBS}"
-    )
-
-    if [[ "${VERBOSE}" == true ]]; then
-        build_args+=(--verbose)
-    fi
-
-    log_debug "cmake ${build_args[*]}"
-
-    measure_time cmake "${build_args[@]}"
-}
-
-do_test() {
-    log_section "Running Tests"
-
-    if [[ ! -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
-        die "Project not built. Run: $0 build"
-    fi
-
-    cd "${BUILD_DIR}"
-
-    local ctest_args=(
-        --output-on-failure
-        --parallel "${PARALLEL_JOBS}"
-    )
-
-    if [[ "${VERBOSE}" == true ]]; then
-        ctest_args+=(--verbose)
-    fi
-
-    measure_time ctest "${ctest_args[@]}"
-}
-
-do_clean() {
-    log_section "Cleaning"
-
-    if [[ -d "${BUILD_DIR}" ]]; then
-        rm -rf "${BUILD_DIR}"
-        log_info "Removed ${BUILD_DIR}"
-    else
-        log_info "Build directory already clean"
-    fi
-
-    # Remove symlink
-    if [[ -L "${PROJECT_ROOT}/compile_commands.json" ]]; then
-        rm "${PROJECT_ROOT}/compile_commands.json"
-    fi
-}
-
-do_install() {
-    log_section "Installing to ${INSTALL_PREFIX}"
-
-    if [[ ! -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
-        die "Project not built. Run: $0 build"
-    fi
-
-    cmake --install "${BUILD_DIR}"
-
-    log_info "Installation complete"
-}
-
-do_all() {
-    check_prerequisites
-
-    if [[ "${CLEAN_FIRST}" == true ]]; then
-        do_clean
-    fi
-
-    do_configure
-    do_build
-    do_test
-}
-
-#######################################
-# Usage and Argument Parsing
-#######################################
-
-show_usage() {
-    grep '^#' "$0" | grep -v '#!/' | sed 's/^# \?//'
-}
-
+# 인자 파싱
 parse_args() {
-    local positional=()
-
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -t|--type)
                 BUILD_TYPE="$2"
                 shift 2
                 ;;
-            -g|--generator)
-                case "$2" in
-                    make)  GENERATOR="Unix Makefiles" ;;
-                    ninja) GENERATOR="Ninja" ;;
-                    *)     GENERATOR="$2" ;;
-                esac
-                shift 2
-                ;;
             -j|--jobs)
                 PARALLEL_JOBS="$2"
-                shift 2
-                ;;
-            -p|--prefix)
-                INSTALL_PREFIX="$2"
                 shift 2
                 ;;
             -c|--clean)
@@ -1512,822 +1104,147 @@ parse_args() {
                 shift
                 ;;
             -h|--help)
-                show_usage
-                exit 0
+                show_help
                 ;;
             -*)
-                die "Unknown option: $1"
+                log_error "알 수 없는 옵션: $1"
+                exit 1
                 ;;
             *)
-                positional+=("$1")
+                COMMAND="$1"
                 shift
                 ;;
         esac
     done
-
-    # Restore positional arguments
-    set -- "${positional[@]:-}"
-
-    # Determine command
-    COMMAND="${1:-all}"
 }
 
-#######################################
-# Main
-#######################################
+# 빌드 디렉토리 설정
+setup_dirs() {
+    local type_lower
+    type_lower=$(echo "${BUILD_TYPE}" | tr '[:upper:]' '[:lower:]')
+    BUILD_DIR="${SCRIPT_DIR}/build/${type_lower}"
 
-main() {
-    parse_args "$@"
-
-    # Validate build type
-    case "${BUILD_TYPE}" in
-        Debug|Release|RelWithDebInfo|MinSizeRel) ;;
-        *) die "Invalid build type: ${BUILD_TYPE}" ;;
-    esac
-
-    # Update build directory based on build type
-    BUILD_DIR="${PROJECT_ROOT}/build/${BUILD_TYPE,,}"
-
-    log_info "Project root: ${PROJECT_ROOT}"
-    log_info "Build directory: ${BUILD_DIR}"
-    log_info "Build type: ${BUILD_TYPE}"
-
-    case "${COMMAND}" in
-        configure) check_prerequisites; do_configure ;;
-        build)     do_build ;;
-        test)      do_test ;;
-        clean)     do_clean ;;
-        install)   do_install ;;
-        all)       do_all ;;
-        *)         die "Unknown command: ${COMMAND}" ;;
-    esac
-
-    log_info "Done!"
+    PARALLEL_JOBS="${PARALLEL_JOBS:-$(detect_cores)}"
 }
 
-main "$@"
-```
-
-### 4.3 Multi-Platform Build Script
-
-```bash
-#!/bin/bash
-#
-# cross-build.sh - Cross-platform build script
-#
-
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Detect platform
-detect_platform() {
-    case "$(uname -s)" in
-        Linux*)   echo "linux" ;;
-        Darwin*)  echo "macos" ;;
-        MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
-        *)        echo "unknown" ;;
-    esac
-}
-
-# Detect architecture
-detect_arch() {
-    case "$(uname -m)" in
-        x86_64|amd64)  echo "x64" ;;
-        arm64|aarch64) echo "arm64" ;;
-        armv7l)        echo "arm" ;;
-        i386|i686)     echo "x86" ;;
-        *)             echo "unknown" ;;
-    esac
-}
-
-PLATFORM=$(detect_platform)
-ARCH=$(detect_arch)
-
-echo "Platform: ${PLATFORM}"
-echo "Architecture: ${ARCH}"
-
-# Platform-specific settings
-case "${PLATFORM}" in
-    linux)
-        export CC=${CC:-gcc}
-        export CXX=${CXX:-g++}
-        GENERATOR="Unix Makefiles"
-        [[ -x "$(command -v ninja)" ]] && GENERATOR="Ninja"
-        ;;
-    macos)
-        export CC=${CC:-clang}
-        export CXX=${CXX:-clang++}
-        GENERATOR="Unix Makefiles"
-        [[ -x "$(command -v ninja)" ]] && GENERATOR="Ninja"
-
-        # macOS specific: set deployment target
-        export MACOSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-10.15}
-        ;;
-    windows)
-        # Use Visual Studio or MinGW
-        if [[ -n "${MSVC:-}" ]]; then
-            GENERATOR="Visual Studio 17 2022"
-        else
-            GENERATOR="MinGW Makefiles"
-        fi
-        ;;
-    *)
-        echo "Unsupported platform: ${PLATFORM}"
-        exit 1
-        ;;
-esac
-
-BUILD_DIR="${SCRIPT_DIR}/build/${PLATFORM}-${ARCH}"
-
-echo "Generator: ${GENERATOR}"
-echo "Build directory: ${BUILD_DIR}"
-
-mkdir -p "${BUILD_DIR}"
-
-cmake -S "${SCRIPT_DIR}" \
-      -B "${BUILD_DIR}" \
-      -G "${GENERATOR}" \
-      -DCMAKE_BUILD_TYPE=Release
-
-cmake --build "${BUILD_DIR}" --parallel
-
-echo "Build complete: ${BUILD_DIR}"
-```
-
----
-
-## Part 5: Real-World Build Script Examples
-
-### 5.1 CI/CD Build Script
-
-```bash
-#!/bin/bash
-#
-# ci-build.sh - Build script for CI/CD pipelines
-#
-
-set -euo pipefail
-
-# CI-specific configuration
-CI=${CI:-false}
-BUILD_NUMBER=${BUILD_NUMBER:-local}
-GIT_COMMIT=${GIT_COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")}
-
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
-BUILD_DIR="${PROJECT_ROOT}/build"
-ARTIFACTS_DIR="${PROJECT_ROOT}/artifacts"
-
-log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
-
-setup_environment() {
-    log "Setting up environment..."
-    log "  CI: ${CI}"
-    log "  Build: ${BUILD_NUMBER}"
-    log "  Commit: ${GIT_COMMIT}"
-
-    mkdir -p "${BUILD_DIR}" "${ARTIFACTS_DIR}"
-}
-
-build() {
-    log "Configuring..."
-    cmake -S "${PROJECT_ROOT}" \
-          -B "${BUILD_DIR}" \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_NUMBER="${BUILD_NUMBER}" \
-          -DGIT_COMMIT="${GIT_COMMIT}"
-
-    log "Building..."
-    cmake --build "${BUILD_DIR}" --parallel
-}
-
-test() {
-    log "Running tests..."
-    cd "${BUILD_DIR}"
-
-    # Generate test results in JUnit format for CI
-    ctest --output-on-failure \
-          --output-junit "${ARTIFACTS_DIR}/test-results.xml"
-}
-
-package() {
-    log "Packaging..."
-
-    # Create tarball
-    local package_name="mycompiler-${BUILD_NUMBER}-${GIT_COMMIT}"
-    local package_dir="${ARTIFACTS_DIR}/${package_name}"
-
-    mkdir -p "${package_dir}"
-    cp "${BUILD_DIR}/mycompiler" "${package_dir}/"
-    cp "${PROJECT_ROOT}/README.md" "${package_dir}/"
-
-    tar -czf "${ARTIFACTS_DIR}/${package_name}.tar.gz" \
-        -C "${ARTIFACTS_DIR}" \
-        "${package_name}"
-
-    log "Package created: ${ARTIFACTS_DIR}/${package_name}.tar.gz"
-}
-
-cleanup() {
-    log "Cleaning up..."
-    rm -rf "${BUILD_DIR}"
-}
-
-main() {
-    trap cleanup EXIT
-
-    setup_environment
-    build
-    test
-    package
-
-    log "CI build complete!"
-}
-
-main "$@"
-```
-
-### 5.2 Development Build Script with Options
-
-```bash
-#!/bin/bash
-#
-# dev-build.sh - Development build with various configurations
-#
-
-set -euo pipefail
-
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
-
-# Default configuration
-BUILD_TYPE="Debug"
-SANITIZER=""
-COVERAGE=false
-STATIC_ANALYSIS=false
-
-usage() {
-    cat << EOF
-Usage: $0 [options]
-
-Options:
-    --release           Release build
-    --debug             Debug build (default)
-    --asan              Enable AddressSanitizer
-    --tsan              Enable ThreadSanitizer
-    --ubsan             Enable UndefinedBehaviorSanitizer
-    --coverage          Enable code coverage
-    --analyze           Run static analysis
-    --all-checks        Enable all sanitizers and analysis
-    -h, --help          Show this help
-
-Examples:
-    $0 --debug --asan
-    $0 --release
-    $0 --all-checks
-EOF
-}
-
-parse_args() {
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --release)      BUILD_TYPE="Release" ;;
-            --debug)        BUILD_TYPE="Debug" ;;
-            --asan)         SANITIZER="address" ;;
-            --tsan)         SANITIZER="thread" ;;
-            --ubsan)        SANITIZER="undefined" ;;
-            --coverage)     COVERAGE=true ;;
-            --analyze)      STATIC_ANALYSIS=true ;;
-            --all-checks)
-                SANITIZER="address,undefined"
-                COVERAGE=true
-                STATIC_ANALYSIS=true
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            *)
-                echo "Unknown option: $1"
-                usage
-                exit 1
-                ;;
-        esac
-        shift
-    done
-}
-
-build() {
-    local build_dir="${PROJECT_ROOT}/build/${BUILD_TYPE,,}"
-    [[ -n "${SANITIZER}" ]] && build_dir+="-${SANITIZER//,/-}"
-    [[ "${COVERAGE}" == true ]] && build_dir+="-coverage"
-
-    echo "Build directory: ${build_dir}"
-    mkdir -p "${build_dir}"
-
-    local cmake_args=(
-        -S "${PROJECT_ROOT}"
-        -B "${build_dir}"
-        -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
-    )
-
-    # Sanitizer flags
-    if [[ -n "${SANITIZER}" ]]; then
-        cmake_args+=(-DCMAKE_CXX_FLAGS="-fsanitize=${SANITIZER}")
-        cmake_args+=(-DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${SANITIZER}")
-    fi
-
-    # Coverage flags
-    if [[ "${COVERAGE}" == true ]]; then
-        cmake_args+=(-DCMAKE_CXX_FLAGS="--coverage")
-        cmake_args+=(-DCMAKE_EXE_LINKER_FLAGS="--coverage")
-    fi
-
-    # Configure
-    cmake "${cmake_args[@]}"
-
-    # Static analysis
-    if [[ "${STATIC_ANALYSIS}" == true ]]; then
-        echo "Running static analysis..."
-        cmake --build "${build_dir}" --target clean || true
-
-        # Use clang-tidy if available
-        if command -v clang-tidy &>/dev/null; then
-            cmake -DCMAKE_CXX_CLANG_TIDY=clang-tidy "${cmake_args[@]}"
-        fi
-    fi
-
-    # Build
-    cmake --build "${build_dir}" --parallel
-
-    echo "Build complete: ${build_dir}"
-}
-
-parse_args "$@"
-build
-```
-
-### 5.3 Complete Project Build Script Template
-
-```bash
-#!/bin/bash
-#######################################
-# Project Build Script
-#
-# A comprehensive build script template
-# for CMake-based C++ projects.
-#######################################
-
-set -euo pipefail
-
-#######################################
-# Constants
-#######################################
-readonly SCRIPT_NAME="$(basename "$0")"
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="${SCRIPT_DIR}"
-
-# Version info
-readonly VERSION="1.0.0"
-
-#######################################
-# Default Configuration
-#######################################
-BUILD_TYPE="Release"
-BUILD_DIR=""
-INSTALL_PREFIX="/usr/local"
-GENERATOR=""
-PARALLEL_JOBS=""
-VERBOSE=false
-CLEAN_BUILD=false
-RUN_TESTS=false
-DO_INSTALL=false
-
-# Feature flags
-ENABLE_TESTS=true
-ENABLE_DOCS=false
-ENABLE_COVERAGE=false
-SANITIZER=""
-
-#######################################
-# Colors (auto-detect terminal support)
-#######################################
-setup_colors() {
-    if [[ -t 1 ]] && [[ "${TERM:-}" != "dumb" ]]; then
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        YELLOW='\033[1;33m'
-        BLUE='\033[0;34m'
-        MAGENTA='\033[0;35m'
-        CYAN='\033[0;36m'
-        BOLD='\033[1m'
-        NC='\033[0m'
-    else
-        RED='' GREEN='' YELLOW='' BLUE=''
-        MAGENTA='' CYAN='' BOLD='' NC=''
-    fi
-}
-
-#######################################
-# Logging
-#######################################
-log_info()    { echo -e "${GREEN}[INFO]${NC} $*"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $*" >&2; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
-log_debug()   { [[ "${VERBOSE}" == true ]] && echo -e "${CYAN}[DEBUG]${NC} $*" || true; }
-log_section() { echo -e "\n${BOLD}${BLUE}==>${NC} ${BOLD}$*${NC}"; }
-
-die() {
-    log_error "$1"
-    exit "${2:-1}"
-}
-
-#######################################
-# System Detection
-#######################################
-detect_system() {
-    # Detect OS
-    case "$(uname -s)" in
-        Linux*)   OS="linux" ;;
-        Darwin*)  OS="macos" ;;
-        MINGW*|MSYS*|CYGWIN*) OS="windows" ;;
-        *)        OS="unknown" ;;
-    esac
-
-    # Detect architecture
-    case "$(uname -m)" in
-        x86_64|amd64)  ARCH="x64" ;;
-        arm64|aarch64) ARCH="arm64" ;;
-        armv7*)        ARCH="arm" ;;
-        i?86)          ARCH="x86" ;;
-        *)             ARCH="unknown" ;;
-    esac
-
-    # Detect CPU cores
-    if command -v nproc &>/dev/null; then
-        CPU_CORES=$(nproc)
-    elif command -v sysctl &>/dev/null; then
-        CPU_CORES=$(sysctl -n hw.ncpu)
-    else
-        CPU_CORES=4
-    fi
-
-    # Set defaults based on system
-    PARALLEL_JOBS="${PARALLEL_JOBS:-${CPU_CORES}}"
-
-    # Detect best generator
-    if [[ -z "${GENERATOR}" ]]; then
-        if command -v ninja &>/dev/null; then
-            GENERATOR="Ninja"
-        else
-            GENERATOR="Unix Makefiles"
-        fi
-    fi
-
-    log_debug "System: ${OS}-${ARCH}, ${CPU_CORES} cores"
-    log_debug "Generator: ${GENERATOR}"
-}
-
-#######################################
-# Prerequisite Checks
-#######################################
-check_prerequisites() {
-    log_section "Checking prerequisites"
-
-    local missing=()
-
-    # Required tools
-    command -v cmake &>/dev/null || missing+=("cmake")
-
-    # C++ compiler
-    if ! command -v g++ &>/dev/null && ! command -v clang++ &>/dev/null; then
-        missing+=("C++ compiler (g++ or clang++)")
-    fi
-
-    # Generator-specific
-    if [[ "${GENERATOR}" == "Ninja" ]]; then
-        command -v ninja &>/dev/null || missing+=("ninja")
-    fi
-
-    # Optional tools
-    if [[ "${ENABLE_DOCS}" == true ]]; then
-        command -v doxygen &>/dev/null || log_warn "doxygen not found, documentation will be skipped"
-    fi
-
-    if [[ ${#missing[@]} -gt 0 ]]; then
-        die "Missing required tools: ${missing[*]}"
-    fi
-
-    # Version checks
-    local cmake_version
-    cmake_version=$(cmake --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-    log_info "CMake version: ${cmake_version}"
-
-    # Check minimum version
-    if [[ "$(printf '%s\n' "3.16" "${cmake_version}" | sort -V | head -n1)" != "3.16" ]]; then
-        die "CMake 3.16 or higher required (found ${cmake_version})"
-    fi
-
-    log_info "All prerequisites satisfied"
-}
-
-#######################################
-# Build Functions
-#######################################
-configure() {
-    log_section "Configuring (${BUILD_TYPE})"
-
+# 명령 실행 함수들
+do_configure() {
+    log_info "설정 중 (${BUILD_TYPE})..."
     mkdir -p "${BUILD_DIR}"
 
     local cmake_args=(
-        -S "${PROJECT_ROOT}"
+        -S "${SCRIPT_DIR}"
         -B "${BUILD_DIR}"
-        -G "${GENERATOR}"
         -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
-        -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}"
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        -DENABLE_TESTS="${ENABLE_TESTS}"
     )
 
-    # Optional features
-    [[ "${ENABLE_COVERAGE}" == true ]] && cmake_args+=(-DENABLE_COVERAGE=ON)
-    [[ -n "${SANITIZER}" ]] && cmake_args+=(-DSANITIZER="${SANITIZER}")
-
-    # Verbose mode
-    [[ "${VERBOSE}" == true ]] && cmake_args+=(-DCMAKE_VERBOSE_MAKEFILE=ON)
-
-    log_debug "cmake ${cmake_args[*]}"
     cmake "${cmake_args[@]}"
+}
 
-    # Symlink compile_commands.json for IDE support
-    if [[ -f "${BUILD_DIR}/compile_commands.json" ]]; then
-        ln -sf "${BUILD_DIR}/compile_commands.json" "${PROJECT_ROOT}/"
+do_build() {
+    log_info "빌드 중 (${PARALLEL_JOBS}개 병렬)..."
+    cmake --build "${BUILD_DIR}" --parallel "${PARALLEL_JOBS}"
+}
+
+do_test() {
+    log_info "테스트 실행 중..."
+    ctest --test-dir "${BUILD_DIR}" --output-on-failure
+}
+
+do_clean() {
+    log_info "정리 중..."
+    rm -rf "${BUILD_DIR}"
+}
+
+# 메인
+main() {
+    parse_args "$@"
+    setup_dirs
+
+    log_info "빌드 타입: ${BUILD_TYPE}"
+    log_info "빌드 디렉토리: ${BUILD_DIR}"
+
+    if [[ "${CLEAN_FIRST}" == true ]]; then
+        do_clean
     fi
 
-    log_info "Configuration complete"
-}
-
-build() {
-    log_section "Building"
-
-    [[ -f "${BUILD_DIR}/CMakeCache.txt" ]] || configure
-
-    local build_args=(
-        --build "${BUILD_DIR}"
-        --parallel "${PARALLEL_JOBS}"
-    )
-
-    [[ "${VERBOSE}" == true ]] && build_args+=(--verbose)
-
-    local start_time=$(date +%s)
-    cmake "${build_args[@]}"
-    local end_time=$(date +%s)
-
-    log_info "Build completed in $((end_time - start_time))s"
-}
-
-run_tests() {
-    log_section "Running tests"
-
-    [[ -f "${BUILD_DIR}/CMakeCache.txt" ]] || die "Project not built"
-
-    cd "${BUILD_DIR}"
-    ctest --output-on-failure --parallel "${PARALLEL_JOBS}"
-
-    log_info "All tests passed"
-}
-
-install() {
-    log_section "Installing to ${INSTALL_PREFIX}"
-
-    [[ -f "${BUILD_DIR}/CMakeCache.txt" ]] || die "Project not built"
-
-    cmake --install "${BUILD_DIR}"
-
-    log_info "Installation complete"
-}
-
-clean() {
-    log_section "Cleaning"
-
-    [[ -d "${BUILD_DIR}" ]] && rm -rf "${BUILD_DIR}"
-    [[ -L "${PROJECT_ROOT}/compile_commands.json" ]] && rm -f "${PROJECT_ROOT}/compile_commands.json"
-
-    log_info "Clean complete"
-}
-
-#######################################
-# Usage
-#######################################
-usage() {
-    cat << EOF
-${BOLD}${SCRIPT_NAME}${NC} v${VERSION} - Build script for the project
-
-${BOLD}USAGE:${NC}
-    ${SCRIPT_NAME} [OPTIONS] [COMMAND]
-
-${BOLD}COMMANDS:${NC}
-    configure       Configure the project
-    build           Build the project (default)
-    test            Run tests
-    install         Install the project
-    clean           Clean build directory
-    all             Configure, build, and test
-
-${BOLD}OPTIONS:${NC}
-    -t, --type TYPE       Build type: Debug, Release, RelWithDebInfo, MinSizeRel
-                          (default: Release)
-    -g, --generator GEN   CMake generator: make, ninja, or full name
-                          (default: auto-detect)
-    -j, --jobs N          Parallel jobs (default: auto-detect)
-    -p, --prefix PATH     Install prefix (default: /usr/local)
-    -c, --clean           Clean before building
-    -v, --verbose         Verbose output
-
-    --with-tests          Enable tests (default: on)
-    --without-tests       Disable tests
-    --with-coverage       Enable code coverage
-    --sanitizer TYPE      Enable sanitizer: address, thread, undefined
-
-    -h, --help            Show this help
-    --version             Show version
-
-${BOLD}EXAMPLES:${NC}
-    ${SCRIPT_NAME}                          # Build release
-    ${SCRIPT_NAME} --type Debug             # Build debug
-    ${SCRIPT_NAME} --clean build test       # Clean build and test
-    ${SCRIPT_NAME} --sanitizer address      # Build with ASan
-    ${SCRIPT_NAME} --type Debug --coverage  # Debug with coverage
-
-${BOLD}ENVIRONMENT:${NC}
-    CC                    C compiler
-    CXX                   C++ compiler
-    CMAKE_BUILD_PARALLEL_LEVEL  Default parallel jobs
-
-EOF
-}
-
-#######################################
-# Argument Parsing
-#######################################
-parse_args() {
-    local commands=()
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -t|--type)
-                BUILD_TYPE="$2"
-                shift 2
-                ;;
-            -g|--generator)
-                case "$2" in
-                    make)   GENERATOR="Unix Makefiles" ;;
-                    ninja)  GENERATOR="Ninja" ;;
-                    *)      GENERATOR="$2" ;;
-                esac
-                shift 2
-                ;;
-            -j|--jobs)
-                PARALLEL_JOBS="$2"
-                shift 2
-                ;;
-            -p|--prefix)
-                INSTALL_PREFIX="$2"
-                shift 2
-                ;;
-            -c|--clean)
-                CLEAN_BUILD=true
-                shift
-                ;;
-            -v|--verbose)
-                VERBOSE=true
-                shift
-                ;;
-            --with-tests)
-                ENABLE_TESTS=true
-                shift
-                ;;
-            --without-tests)
-                ENABLE_TESTS=false
-                shift
-                ;;
-            --with-coverage)
-                ENABLE_COVERAGE=true
-                shift
-                ;;
-            --sanitizer)
-                SANITIZER="$2"
-                shift 2
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            --version)
-                echo "${VERSION}"
-                exit 0
-                ;;
-            -*)
-                die "Unknown option: $1"
-                ;;
-            *)
-                commands+=("$1")
-                shift
-                ;;
-        esac
-    done
-
-    # Default command
-    [[ ${#commands[@]} -eq 0 ]] && commands=("build")
-
-    # Store commands
-    COMMANDS=("${commands[@]}")
-}
-
-#######################################
-# Main
-#######################################
-main() {
-    setup_colors
-    parse_args "$@"
-    detect_system
-
-    # Validate build type
-    case "${BUILD_TYPE}" in
-        Debug|Release|RelWithDebInfo|MinSizeRel) ;;
-        *) die "Invalid build type: ${BUILD_TYPE}" ;;
+    case "${COMMAND}" in
+        configure)  do_configure ;;
+        build)      do_configure; do_build ;;
+        test)       do_test ;;
+        clean)      do_clean ;;
+        all)        do_configure; do_build; do_test ;;
+        *)          log_error "알 수 없는 명령: ${COMMAND}"; exit 1 ;;
     esac
 
-    # Set build directory
-    BUILD_DIR="${BUILD_DIR:-${PROJECT_ROOT}/build/${BUILD_TYPE,,}}"
-    [[ -n "${SANITIZER}" ]] && BUILD_DIR+="-${SANITIZER}"
-
-    # Print configuration
-    log_info "Project: ${PROJECT_ROOT}"
-    log_info "Build: ${BUILD_DIR}"
-    log_info "Type: ${BUILD_TYPE}"
-
-    # Clean if requested
-    [[ "${CLEAN_BUILD}" == true ]] && clean
-
-    # Execute commands
-    for cmd in "${COMMANDS[@]}"; do
-        case "${cmd}" in
-            configure)  check_prerequisites; configure ;;
-            build)      build ;;
-            test)       run_tests ;;
-            install)    install ;;
-            clean)      clean ;;
-            all)        check_prerequisites; configure; build; run_tests ;;
-            *)          die "Unknown command: ${cmd}" ;;
-        esac
-    done
-
-    echo ""
-    log_info "Done!"
+    log_info "완료!"
 }
 
 main "$@"
 ```
 
+### 4.3 사용 예시
+
+```bash
+# 기본 빌드 (Release)
+./build.sh
+
+# Debug 빌드
+./build.sh --type Debug
+
+# 정리 후 빌드
+./build.sh --clean build
+
+# 전체 (설정 + 빌드 + 테스트)
+./build.sh --type Debug all
+
+# 병렬 작업 수 지정
+./build.sh -j 4 build
+```
+
 ---
 
-## Summary
+## 요약
 
-### Key Shell Script Concepts
+### 셸 스크립트 핵심
 
-| Concept | Syntax |
-|---------|--------|
-| Variables | `VAR="value"`, `${VAR}` |
-| Command substitution | `$(command)` |
-| Conditionals | `if [[ condition ]]; then ... fi` |
-| Loops | `for x in list; do ... done` |
-| Functions | `func() { ... }` |
-| Arguments | `$1`, `$@`, `$#` |
-| Exit status | `$?`, `exit 1` |
-| Error handling | `set -euo pipefail` |
+| 개념 | 문법 | 예시 |
+|------|------|------|
+| 변수 할당 | `VAR="값"` | `NAME="tiger"` |
+| 변수 사용 | `$VAR`, `${VAR}` | `echo "$NAME"` |
+| 명령 치환 | `$(명령)` | `TODAY=$(date)` |
+| 기본값 | `${VAR:-기본값}` | `${TYPE:-Release}` |
+| 조건문 | `if [ ]; then fi` | `if [ -f "$F" ]; then` |
+| 반복문 | `for in; do done` | `for f in *.cpp; do` |
+| 함수 | `func() { }` | `log() { echo "$1"; }` |
+| 오류 처리 | `set -euo pipefail` | 스크립트 시작 부분에 |
 
-### Key CMake Concepts
+### CMake 핵심
 
-| Concept | Command |
-|---------|---------|
-| Minimum version | `cmake_minimum_required(VERSION 3.16)` |
-| Project | `project(Name VERSION 1.0)` |
-| Executable | `add_executable(name sources...)` |
-| Library | `add_library(name STATIC sources...)` |
-| Link | `target_link_libraries(target lib)` |
-| Include dirs | `target_include_directories(target dir)` |
-| Compile options | `target_compile_options(target flags)` |
-| Install | `install(TARGETS target DESTINATION dir)` |
+| 개념 | 명령 | 설명 |
+|------|------|------|
+| 최소 버전 | `cmake_minimum_required(VERSION 3.16)` | 필요한 CMake 버전 |
+| 프로젝트 | `project(Name LANGUAGES CXX)` | 프로젝트 선언 |
+| 실행 파일 | `add_executable(name src...)` | 실행 파일 생성 |
+| 라이브러리 | `add_library(name STATIC src...)` | 라이브러리 생성 |
+| 링크 | `target_link_libraries(a PRIVATE b)` | 라이브러리 연결 |
+| 포함 경로 | `target_include_directories(a PRIVATE dir)` | 헤더 경로 추가 |
+| 메시지 | `message(STATUS "...")` | 정보 출력 |
+| 옵션 | `option(VAR "설명" ON)` | 불리언 옵션 |
 
-### Build Script Best Practices
+### 빌드 명령
 
-1. **Always use `set -euo pipefail`** for error handling
-2. **Detect system automatically** (OS, architecture, cores)
-3. **Provide sensible defaults** that can be overridden
-4. **Use colored output** for better readability
-5. **Include usage/help documentation**
-6. **Support both configure and build steps**
-7. **Create compile_commands.json** for IDE support
-8. **Measure and report build times**
-9. **Handle cleanup properly** with traps
-10. **Support CI/CD environments** with appropriate flags
+```bash
+# CMake 설정
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+# 빌드
+cmake --build build --parallel
+
+# 테스트
+ctest --test-dir build --output-on-failure
+
+# 설치
+cmake --install build
+```
