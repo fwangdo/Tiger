@@ -1,0 +1,8 @@
+/* Basic Tiger test file */
+let
+    var x := 10
+    var y := 20
+    function add(a: int, b: int): int = a + b
+in
+    add(x, y)
+end

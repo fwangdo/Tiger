@@ -1,0 +1,22 @@
+# Book
+./book.pdf
+
+# Build artifacts
+build/
+tiger
+
+# Object files
+*.o
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Debug files
+*.dSYM/

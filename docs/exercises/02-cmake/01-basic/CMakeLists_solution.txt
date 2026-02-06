@@ -1,0 +1,14 @@
+# Exercise: Basic CMakeLists.txt - SOLUTION
+
+# TODO 1: Set minimum CMake version to 3.16
+cmake_minimum_required(VERSION 3.16)
+
+# TODO 2: Define project named "Calculator" with C++ language
+project(Calculator LANGUAGES CXX)
+
+# TODO 3: Set C++ standard to 17 and make it required
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# TODO 4: Create executable "calculator" from main.cpp
+add_executable(calculator main.cpp)

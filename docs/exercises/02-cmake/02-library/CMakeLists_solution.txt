@@ -1,0 +1,22 @@
+# Exercise: Library and Executable - SOLUTION
+
+cmake_minimum_required(VERSION 3.16)
+project(MathApp LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# TODO 1: Create a STATIC library
+add_library(mathlib STATIC lib/math_utils.cpp)
+
+# TODO 2: Add include directory
+target_include_directories(mathlib PUBLIC lib)
+
+# TODO 3: Create executable
+add_executable(mathapp src/main.cpp)
+
+# TODO 4: Link library
+target_link_libraries(mathapp PRIVATE mathlib)
+
+# TODO 5: Add warning flags
+target_compile_options(mathapp PRIVATE -Wall -Wextra)

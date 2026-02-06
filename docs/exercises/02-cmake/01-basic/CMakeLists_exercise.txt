@@ -1,0 +1,24 @@
+# Exercise: Basic CMakeLists.txt
+#
+# Create a minimal CMake configuration for a simple C++ project.
+#
+# Build:
+#   mkdir build && cd build
+#   cmake ..
+#   cmake --build .
+#
+# Run:
+#   ./calculator
+
+# TODO 1: Set minimum CMake version to 3.16
+___
+
+# TODO 2: Define project named "Calculator" with C++ language
+___
+
+# TODO 3: Set C++ standard to 17 and make it required
+___
+___
+
+# TODO 4: Create executable "calculator" from main.cpp
+___

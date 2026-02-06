@@ -28,4 +28,5 @@ clean:
 $(BUILD_DIR)/token.o: $(SRC_DIR)/token.hpp
 $(BUILD_DIR)/lexer.o: $(SRC_DIR)/lexer.hpp $(SRC_DIR)/token.hpp
 $(BUILD_DIR)/parser.o: $(SRC_DIR)/parser.hpp $(SRC_DIR)/ast.hpp $(SRC_DIR)/lexer.hpp $(SRC_DIR)/token.hpp
-$(BUILD_DIR)/main.o: $(SRC_DIR)/lexer.hpp $(SRC_DIR)/parser.hpp
+$(BUILD_DIR)/ast_printer.o: $(SRC_DIR)/ast_printer.hpp $(SRC_DIR)/ast.hpp
+$(BUILD_DIR)/main.o: $(SRC_DIR)/lexer.hpp $(SRC_DIR)/parser.hpp $(SRC_DIR)/ast_printer.hpp

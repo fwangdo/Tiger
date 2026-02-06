@@ -76,15 +76,18 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    bool lex_only = false;
+    enum class Mode { LEX, PARSE, AST };
+    Mode mode = Mode::PARSE;
     std::string filename;
 
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
         if (arg == "--lex") {
-            lex_only = true;
+            mode = Mode::LEX;
         } else if (arg == "--parse") {
-            lex_only = false;
+            mode = Mode::PARSE;
+        } else if (arg == "--ast") {
+            mode = Mode::AST;
         } else if (arg == "--help" || arg == "-h") {
             print_usage(argv[0]);
             return 0;
@@ -100,10 +103,16 @@ int main(int argc, char* argv[]) {
 
     std::string source = read_file(filename);
 
-    if (lex_only) {
-        run_lexer(source);
-    } else {
-        run_parser(source);
+    switch (mode) {
+        case Mode::LEX:
+            run_lexer(source);
+            break;
+        case Mode::PARSE:
+            run_parser(source, false);
+            break;
+        case Mode::AST:
+            run_parser(source, true);
+            break;
     }
 
     return 0;

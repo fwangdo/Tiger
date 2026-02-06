@@ -1,0 +1,34 @@
+# Exercise: Library and Executable
+#
+# Create a project with a static library and an executable that uses it.
+#
+# Structure:
+#   02-library/
+#   ├── CMakeLists.txt
+#   ├── src/
+#   │   └── main.cpp
+#   └── lib/
+#       ├── math_utils.hpp
+#       └── math_utils.cpp
+
+cmake_minimum_required(VERSION 3.16)
+project(MathApp LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# TODO 1: Create a STATIC library named "mathlib" from lib/math_utils.cpp
+___
+
+# TODO 2: Add lib/ as a PUBLIC include directory for mathlib
+# (PUBLIC means targets linking to mathlib also get this include path)
+___
+
+# TODO 3: Create executable "mathapp" from src/main.cpp
+___
+
+# TODO 4: Link mathlib to mathapp using PRIVATE
+___
+
+# TODO 5: Add compiler warning flags -Wall -Wextra to mathapp
+___
