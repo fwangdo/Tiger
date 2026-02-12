@@ -63,6 +63,7 @@ Token Lexer::make_token(TokenType type, const std::string& text, Position start)
 }
 
 // Tiger comments are /* ... */ and can nest
+// This is the right answer for handling comments. 
 bool Lexer::skip_comment() {
     if (peek() != '/' || peek_next() != '*') return false;
 
@@ -117,6 +118,7 @@ Token Lexer::scan_identifier() {
         }
     }
 
+    // check whether it's reserved or not. 
     auto it = keywords.find(text);
     if (it != keywords.end()) {
         return make_token(it->second, text, start);
@@ -186,6 +188,7 @@ Token Lexer::scan_string() {
 }
 
 Token Lexer::next_token() {
+    // if there is lookahead token, then it returns lookahead.
     if (has_current_) {
         has_current_ = false;
         return current_;
@@ -244,6 +247,7 @@ Token Lexer::next_token() {
                 advance();
                 return make_token(TokenType::LE, "<=", start);
             }
+            // otherwise.. 
             return make_token(TokenType::LT, "<", start);
 
         case '>':

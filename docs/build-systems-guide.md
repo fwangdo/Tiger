@@ -546,6 +546,15 @@ CMake는 **빌드 시스템 생성기**입니다.
                                              └──────────────┘
 ```
 
+### Summary of whole procedure. 
+
+The procedure that c++ makes a binary file as follows: 
+1. Generate object files(.o) from source files(.cpp)
+2. Link object files(.o) and library files, then the result will be the binary file which is our goal. 
+
+add_executable means "generate binary file by given source codes."
+add_ means "generate binary file by given source codes."
+
 ### 2.2 기본 CMakeLists.txt
 
 ```cmake
@@ -698,6 +707,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 
 ```cmake
 # 정적 라이브러리 (Static Library)
+# 정적 링킹 파일을 만듦(.a)
 # 컴파일 시 실행 파일에 포함됨
 add_library(mylib STATIC
     src/lexer.cpp

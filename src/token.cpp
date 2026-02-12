@@ -51,6 +51,7 @@ const char* token_type_to_string(TokenType type) {
     return "UNKNOWN";
 }
 
+// os means output stream. 
 std::ostream& operator<<(std::ostream& os, const Token& tok) {
     os << token_type_to_string(tok.type);
     if (!tok.text.empty()) {

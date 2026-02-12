@@ -15,6 +15,9 @@ public:
     Token peek_token();
     bool at_end() const;
 
+    // the first const means "this function returns constant."
+    // the second const means "this fucntino won't change this instance." 
+    // & -> no copy. 
     const std::vector<std::string>& errors() const { return errors_; }
     bool has_errors() const { return !errors_.empty(); }
 
@@ -24,7 +27,7 @@ private:
     int line_;
     int column_;
     Token current_;
-    bool has_current_;
+    bool has_current_; // means "does it have lookahead?"
     std::vector<std::string> errors_;
 
     char peek() const;
