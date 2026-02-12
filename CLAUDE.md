@@ -61,5 +61,11 @@ For multi-step tasks, state a brief plan:
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
 ---
+The main goal of this project is adjusting to using c++. In particular we focus on using modern c++ style programming / build systems(cmake) / shell scripts for build. To achieve goal, we try to translate c code to modern c++ code. What we try to implement is a compiler in modern compiler implementation in c, which is knwon for tiger book. Given this, you help me out. You should keep things below in your mind. 
+
+1. You should proper modern c++ code. Even though you try to translate c code to c++, you have to find a method to express old c grammar in modern c++(e.g., void*)
+2. If there are thigns that I should learn when you help me out, you have to make summary and quiz to recap them. 
+
+---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
