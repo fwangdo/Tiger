@@ -59,10 +59,10 @@ endif()
 # Library: tiger_core
 #######################################
 add_library(tiger_core STATIC
-    src/token.cpp
-    src/lexer.cpp
-    src/parser.cpp
-    src/ast_printer.cpp
+    src/lexer/Token.cpp
+    src/lexer/Lexer.cpp
+    src/parser/Parser.cpp
+    src/util/ASTPrinter.cpp
 )
 
 target_include_directories(tiger_core PUBLIC
@@ -94,11 +94,11 @@ install(TARGETS tiger_core
 )
 
 install(FILES
-    src/token.hpp
-    src/lexer.hpp
-    src/parser.hpp
-    src/ast.hpp
-    src/ast_printer.hpp
+    src/lexer/Token.hpp
+    src/lexer/Lexer.hpp
+    src/parser/AST.hpp
+    src/parser/Parser.hpp
+    src/util/ASTPrinter.hpp
     DESTINATION include/tiger
 )
 

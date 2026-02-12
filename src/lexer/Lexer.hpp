@@ -1,7 +1,7 @@
 #ifndef TIGER_LEXER_HPP
 #define TIGER_LEXER_HPP
 
-#include "token.hpp"
+#include "Token.hpp"
 #include <string>
 #include <vector>
 

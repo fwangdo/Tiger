@@ -1,4 +1,4 @@
-#include "ast_printer.hpp"
+#include "ASTPrinter.hpp"
 
 namespace tiger {
 

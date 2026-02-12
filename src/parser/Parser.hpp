@@ -1,8 +1,8 @@
 #ifndef TIGER_PARSER_HPP
 #define TIGER_PARSER_HPP
 
-#include "ast.hpp"
-#include "lexer.hpp"
+#include "AST.hpp"
+#include "lexer/Lexer.hpp"
 #include <memory>
 #include <vector>
 

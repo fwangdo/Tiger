@@ -1,6 +1,6 @@
-#include "ast_printer.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
+#include "util/ASTPrinter.hpp"
+#include "lexer/Lexer.hpp"
+#include "parser/Parser.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>

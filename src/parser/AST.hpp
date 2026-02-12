@@ -1,7 +1,7 @@
 #ifndef TIGER_AST_HPP
 #define TIGER_AST_HPP
 
-#include "token.hpp"
+#include "lexer/Token.hpp"
 #include <memory>
 #include <string>
 #include <vector>

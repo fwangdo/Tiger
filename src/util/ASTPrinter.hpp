@@ -1,7 +1,7 @@
 #ifndef TIGER_AST_PRINTER_HPP
 #define TIGER_AST_PRINTER_HPP
 
-#include "ast.hpp"
+#include "parser/AST.hpp"
 #include <ostream>
 
 namespace tiger {
