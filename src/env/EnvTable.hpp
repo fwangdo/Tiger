@@ -6,8 +6,8 @@
 //  C:   typedef char *string;      →  C++: std::string
 
 #include <memory>    // std::unique_ptr, std::make_unique
-#include <string>
-#include <vector>
+#include <string>    // c++ string.
+#include <vector>    // standard container.  
 
 namespace tiger {
 

@@ -28,7 +28,7 @@ EnvTable::Bucket::Bucket(const std::string& k, std::unique_ptr<Binding> b,
                          std::unique_ptr<Bucket> n)
     // TODO: replace with member initializer list
     //   : key(k), binding(?), next(?)
-    : key(k), binding(nullptr), next(nullptr) {}
+    : key(k), binding(std::move(b)), next(std::move(n)) {}
 
 // ============================================================================
 // hash
@@ -44,6 +44,10 @@ EnvTable::Bucket::Bucket(const std::string& k, std::unique_ptr<Binding> b,
 unsigned int EnvTable::hash(const std::string& key) {
     unsigned int h = 0;
     // TODO: iterate over each char in key, apply h = h * 65599 + c
+
+    for (auto &elem : key) {
+      h = h * 65599 + elem; 
+    }
     return h;
 }
 
