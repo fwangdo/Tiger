@@ -7,7 +7,7 @@
 
 #include <memory>    // std::unique_ptr, std::make_unique
 #include <string>    // c++ string.
-#include <vector>    // standard container.  
+#include <vector>    // standard container.
 
 namespace tiger {
 
@@ -19,32 +19,32 @@ namespace tiger {
 //
 // virtual destructor ensures derived classes are cleaned up properly.
 struct Binding {
-    virtual ~Binding() = default;
+  virtual ~Binding() = default;
 };
 
 class EnvTable {
 public:
-    EnvTable();
+  EnvTable();
 
-    void     insert(const std::string& key, std::unique_ptr<Binding> binding);
-    Binding* lookup(const std::string& key) const;
-    void     pop(const std::string& key);
+  void     insert(const std::string& key, std::unique_ptr<Binding> binding);
+  Binding* lookup(const std::string& key) const;
+  void     pop(const std::string& key);
 
 private:
-    static constexpr int SIZE = 109;
+  static constexpr int SIZE = 109;
 
-    struct Bucket {
-        std::string key;
-        std::unique_ptr<Binding> binding;
-        std::unique_ptr<Bucket> next;
+  struct Bucket {
+    std::string key;
+    std::unique_ptr<Binding> binding;
+    std::unique_ptr<Bucket> next;
 
-        Bucket(const std::string& k, std::unique_ptr<Binding> b,
-               std::unique_ptr<Bucket> n);
-    };
+    Bucket(const std::string& k, std::unique_ptr<Binding> b,
+           std::unique_ptr<Bucket> n);
+  };
 
-    std::vector<std::unique_ptr<Bucket>> table_;
+  std::vector<std::unique_ptr<Bucket>> table_;
 
-    static unsigned int hash(const std::string& key);
+  static unsigned int hash(const std::string& key);
 };
 
 } // namespace tiger

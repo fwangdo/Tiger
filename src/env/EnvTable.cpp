@@ -1,4 +1,5 @@
 #include "EnvTable.hpp"
+#include <memory>
 
 namespace tiger {
 
@@ -26,9 +27,7 @@ EnvTable::EnvTable() : table_(SIZE) {}
 
 EnvTable::Bucket::Bucket(const std::string& k, std::unique_ptr<Binding> b,
                          std::unique_ptr<Bucket> n)
-    // TODO: replace with member initializer list
-    //   : key(k), binding(?), next(?)
-    : key(k), binding(std::move(b)), next(std::move(n)) {}
+  : key(k), binding(std::move(b)), next(std::move(n)) {}
 
 // ============================================================================
 // hash
@@ -42,13 +41,11 @@ EnvTable::Bucket::Bucket(const std::string& k, std::unique_ptr<Binding> b,
 //   for (char c : key) { ... }
 
 unsigned int EnvTable::hash(const std::string& key) {
-    unsigned int h = 0;
-    // TODO: iterate over each char in key, apply h = h * 65599 + c
-
-    for (auto &elem : key) {
-      h = h * 65599 + elem; 
-    }
-    return h;
+  unsigned int h = 0;
+  for (char c : key) {
+    h = h * 65599 + static_cast<unsigned int>(c);
+  }
+  return h;
 }
 
 // ============================================================================
@@ -63,9 +60,11 @@ unsigned int EnvTable::hash(const std::string& key) {
 //      then assign it to table_[index] with std::move.
 
 void EnvTable::insert(const std::string& key, std::unique_ptr<Binding> binding) {
-    int index = hash(key) % SIZE;
-    // TODO: create a new Bucket and link old head as next
-    // TODO: assign it to table_[index]
+  int index = hash(key) % SIZE;
+  // TODO: create a new Bucket and link old head as next
+  // TODO: assign it to table_[index]
+  // hint: consider data exists already in table_[index], then we should move the data to next slot of generated bucket. 
+  table_[index] = std::make_unique<Bucket>(key, std::move(binding), std::move(table_[index])) ; 
 }
 
 // ============================================================================
@@ -83,9 +82,15 @@ void EnvTable::insert(const std::string& key, std::unique_ptr<Binding> binding) 
 //      Return nullptr if not found.
 
 Binding* EnvTable::lookup(const std::string& key) const {
-    int index = hash(key) % SIZE;
-    // TODO: traverse the chain, return b->binding.get() when b->key == key
-    return nullptr;
+  int index = hash(key) % SIZE; 
+  // TODO: traverse the chain, return b->binding.get() when b->key == key
+  // .get() method in smart pointer gives raw pointer. 
+  for (auto b = table_[index].get(); b; b = b->next.get()) {
+    if (b->key == key) {
+      return b->binding.get(); 
+    }
+  }
+  return nullptr;
 }
 
 // ============================================================================
@@ -99,8 +104,8 @@ Binding* EnvTable::lookup(const std::string& key) const {
 //      The old head is automatically freed.
 
 void EnvTable::pop(const std::string& key) {
-    int index = hash(key) % SIZE;
-    // TODO: move table_[index]->next into table_[index]
+  int index = hash(key) % SIZE;
+  // TODO: move table_[index]->next into table_[index]
 }
 
 } // namespace tiger
