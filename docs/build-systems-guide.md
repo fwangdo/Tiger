@@ -585,6 +585,8 @@ add_executable(mycompiler
 target_include_directories(mycompiler PRIVATE src)
 ```
 
+target_incldue_driectories means "path for -i option". -I option lets c++ compilers know where to check to find header files. 
+
 ### 2.3 CMake로 빌드하기
 
 ```bash
@@ -920,6 +922,7 @@ ctest --output-on-failure  # 실패한 테스트의 출력 표시
 ```
 
 ### 3.4 설치 (Install)
+Install needs for other projects to use this project by binary paths. 
 
 ```cmake
 # 실행 파일 설치

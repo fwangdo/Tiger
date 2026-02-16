@@ -13,23 +13,23 @@
 
 # TODO 1: Assign "Hello" to a variable named GREETING
 # Hint: No spaces around the = sign
-GREETING=___
+GREETING="HELLO"
 
 # TODO 2: Create a variable BUILD_DIR with value "build"
-BUILD_DIR=___
+BUILD_DIR="build"
 
 # TODO 3: Print "Hello from build" using both variables
 # Hint: Use $VAR or ${VAR} syntax
-echo "Message: ___"
+echo "Message: ${GREETING} from ${BUILD_DIR}"
 
 # TODO 4: Capture the output of 'date +%Y-%m-%d' into variable TODAY
 # Hint: Use $(command) syntax
-TODAY=___
+TODAY=$(date +%Y-%m-%d)
 
 # TODO 5: Set BUILD_TYPE with a default value
 # If BUILD_TYPE is not set, it should default to "Release"
 # Hint: Use ${VAR:-default} syntax
-BUILD_TYPE=${___}
+BUILD_TYPE=${BUILD_TYPE:-Release}
 
 # Print results
 echo "Greeting: $GREETING"
