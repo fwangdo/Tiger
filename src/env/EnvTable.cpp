@@ -85,7 +85,7 @@ Binding* EnvTable::lookup(const std::string& key) const {
   int index = hash(key) % SIZE; 
   // TODO: traverse the chain, return b->binding.get() when b->key == key
   // .get() method in smart pointer gives raw pointer. 
-  for (auto b = table_[index].get(); b; b = b->next.get()) {
+  for (auto b = table_[index].get(); b; b =b->next.get()) {
     if (b->key == key) {
       return b->binding.get(); 
     }
@@ -106,6 +106,7 @@ Binding* EnvTable::lookup(const std::string& key) const {
 void EnvTable::pop(const std::string& key) {
   int index = hash(key) % SIZE;
   // TODO: move table_[index]->next into table_[index]
+  table_[index] = std::move(table_[index]->next);  
 }
 
 } // namespace tiger
