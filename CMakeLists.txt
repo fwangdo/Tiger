@@ -58,11 +58,13 @@ endif()
 #######################################
 # Library: tiger_core
 #######################################
+# library 
 add_library(tiger_core STATIC
     src/lexer/Token.cpp
     src/lexer/Lexer.cpp
     src/parser/Parser.cpp
     src/util/ASTPrinter.cpp
+    src/env/EnvTable.cpp 
 )
 
 target_include_directories(tiger_core PUBLIC
@@ -79,7 +81,6 @@ target_compile_definitions(tiger_core PRIVATE
 # Executable: tiger
 #######################################
 add_executable(tiger src/main.cpp)
-
 target_link_libraries(tiger PRIVATE tiger_core)
 
 #######################################
@@ -125,6 +126,16 @@ if(ENABLE_TESTS)
         NAME test_ast_basic
         COMMAND tiger --ast ${CMAKE_SOURCE_DIR}/tests/basic.tig
     )
+
+    add_executable(test_env_table tests/test_env_table.cpp)
+    target_link_libraries(test_env_table PRIVATE tiger_core)
+
+    # Test; Environment. 
+    add_test(
+        NAME test_env_table        
+        COMMAND test_env_table 
+    )
+
 endif()
 
 #######################################
