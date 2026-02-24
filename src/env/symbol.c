@@ -24,6 +24,75 @@
 #include "symbol.h"
 
 /* ====================================================================
+ * 0. TAB_table — generic hash table (from table.c in Tiger book)
+ * ====================================================================
+ *
+ * A hash table where keys and values are void*.
+ * Each bucket is a linked list (stack) — same structure as EnvTable.
+ * TAB_pop returns the key of the most recently inserted binding and
+ * removes it, enabling scope unwinding.
+ */
+
+const int SIZE = 109; 
+
+struct binder_ {
+  void *key;
+  void *value;
+  struct binder_ *next;
+  void *prevtop;           /* previous head of the "top" stack */
+};
+
+struct TAB_table_ {
+  struct binder_ *table[SIZE];
+  void *top;               /* most recently inserted key (for TAB_pop) */
+};
+
+TAB_table TAB_empty(void) {
+  TAB_table t = malloc(sizeof(*t));
+  int i;
+  t->top = NULL;
+  for (i = 0; i < SIZE; i++)
+    t->table[i] = NULL;
+  return t;
+}
+
+static unsigned int tab_hash(void *key) {
+  /* hash the pointer address itself */
+  return ((unsigned long)key) % SIZE;
+}
+
+void TAB_enter(TAB_table t, void *key, void *value) {
+  int index = tab_hash(key);
+  struct binder_ *b = malloc(sizeof(*b));
+  b->key = key;
+  b->value = value;
+  b->next = t->table[index];
+  b->prevtop = t->top;
+  t->table[index] = b;
+  t->top = key;
+}
+
+void *TAB_look(TAB_table t, void *key) {
+  int index = tab_hash(key);
+  struct binder_ *b;
+  for (b = t->table[index]; b; b = b->next)
+    if (b->key == key)       /* pointer comparison — works because symbols are interned */
+      return b->value;
+  return NULL;
+}
+
+/* Pop the most recently inserted binding. Returns its key. */
+void *TAB_pop(TAB_table t) {
+  void *key = t->top;
+  int index = tab_hash(key);
+  struct binder_ *b = t->table[index];
+  t->table[index] = b->next;
+  t->top = b->prevtop;
+  free(b);
+  return key;
+}
+
+/* ====================================================================
  * 1. Symbol interning
  * ====================================================================
  *

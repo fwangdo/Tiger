@@ -44,7 +44,7 @@ private:
 
   std::vector<std::unique_ptr<Bucket>> table_;
 
-  static unsigned int hash(const std::string& key);
+  // hash lives in util::hash — no private copy needed.
 };
 
 } // namespace tiger

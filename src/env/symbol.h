@@ -33,9 +33,18 @@ S_Symbol S_Symbol(string name);
 /* Retrieve the original string from a symbol. */
 string S_name(S_Symbol sym);
 
+/* ---- TAB_table: generic hash table (from table.h in Tiger book) ---- */
+
+typedef struct TAB_table_ *TAB_table;
+
+TAB_table TAB_empty(void);                              /* create empty table   */
+void      TAB_enter(TAB_table t, void *key, void *value); /* bind key→value    */
+void     *TAB_look (TAB_table t, void *key);             /* lookup binding      */
+void     *TAB_pop  (TAB_table t);                        /* pop most recent key */
+
 /* ---- Scoped symbol table built on TAB_table ---- */
 
-typedef struct TAB_table_ *S_table;
+typedef TAB_table S_table;  /* S_table is just a TAB_table */
 
 S_table  S_empty(void);                         /* create empty table       */
 void     S_enter(S_table t, S_Symbol sym, void *value);  /* bind sym→value */
